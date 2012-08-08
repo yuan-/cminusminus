@@ -135,3 +135,8 @@ void CTokenizer::Run()
 		iLineNumber++;
 	}
 }
+
+std::list<CToken> CTokenizer::GetTokenList()
+{
+	return m_lTokenList;
+}

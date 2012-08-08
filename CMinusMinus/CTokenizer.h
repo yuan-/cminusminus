@@ -32,4 +32,6 @@ public:
 	void AddTokenToList(std::string sTokenValue, int iLineNumber);
 	// Returns the token type from the value
 	eTokenType GetTokenType(std::string sTokenValue);
+	// Returns the token list
+	std::list<CToken> GetTokenList();
 };
