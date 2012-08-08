@@ -75,12 +75,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CCompiler.cpp" />
     <ClCompile Include="CLogger.cpp" />
+    <ClCompile Include="CParser.cpp" />
     <ClCompile Include="CTokenizer.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CCompiler.h" />
     <ClInclude Include="CLogger.h" />
+    <ClInclude Include="CParser.h" />
     <ClInclude Include="CToken.h" />
     <ClInclude Include="CTokenizer.h" />
   </ItemGroup>
