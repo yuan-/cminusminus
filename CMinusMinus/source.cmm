@@ -1,0 +1,4 @@
+{
+	float fPi =  3.14;
+	int iZero = 0;
+}
