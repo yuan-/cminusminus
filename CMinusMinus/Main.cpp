@@ -12,25 +12,30 @@
 #include "CTokenizer.h"
 #include "CToken.h"
 #include "CLogger.h"
+#include "CCompiler.h"
 
 #include <iostream>
 #include <list>
 
 int main(int argc, char * argv[])
 {
-	// Do we have enough arguments passed to the CMinusMinus?
+	#if _DEBUG
+	CLogger::Write("* Opening source file: %s", argv[1]);
+	#endif
+
+	// Do we have enough arguments passed to the CMinusMinus compiler?
 	if(argc < 2)
 	{
 		CLogger::Write("* Not enough arguments. No source file to open.");
 		exit(1);
 	}
 
-	CLogger::Write("Opening source file: %s", argv[1]);
-
 	// Initialise the tokenizer
 	CTokenizer oTokenizer = CTokenizer(argv[1]);
 	oTokenizer.Run();
-	std::list<CToken> lTokenList = oTokenizer.GetTokenList();
+
+	CCompiler oCompiler = CCompiler(oTokenizer.GetTokenList());
+	oCompiler.Run();
 
 	// Stop the console from closing
 	std::getchar();

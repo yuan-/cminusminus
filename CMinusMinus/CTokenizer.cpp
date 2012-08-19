@@ -78,6 +78,10 @@ void CTokenizer::Run()
 		exit(1);
 	}
 
+	#if _DEBUG
+	CLogger::Write("* File contents:");
+	#endif
+
 	while(std::getline(fileStream, sLine))
 	{
 		CLogger::Write("%s", sLine.c_str());
@@ -134,9 +138,35 @@ void CTokenizer::Run()
 		// Increment the line number
 		iLineNumber++;
 	}
+
+	#if _DEBUG
+	CLogger::Write("\n* Tokens found in the source:");
+
+	for(TokenList::iterator iterator = m_lTokenList.begin(); iterator != m_lTokenList.end(); iterator++)
+		CLogger::Write("Token found: %s - Value: %s - On line: %d", getStringFromTokenType((*iterator).m_iTokenType), (*iterator).m_sValue.c_str(), (*iterator).m_iLine);
+	#endif
+
 }
 
+// Return the token list
 std::list<CToken> CTokenizer::GetTokenList()
 {
 	return m_lTokenList;
 }
+
+// This method returns the string type from the token, this method is only available when compiling in debug mode
+#if _DEBUG
+const char * CTokenizer::getStringFromTokenType(eTokenType eType)
+{
+	if(eType == CLOSE_BRACKET_TOKEN) return "CLOSE_BRACKET_TOKEN";
+	if(eType == OPEN_BRACKET_TOKEN) return "OPEN_BRACKET_TOKEN";
+	if(eType == SEMICOLON_TOKEN) return "SEMICOLON_TOKEN";
+	if(eType == INTEGER_TYPE_TOKEN) return "INTEGER_TYPE_TOKEN";
+	if(eType == FLOAT_TYPE_TOKEN) return "FLOAT_TYPE_TOKEN";
+	if(eType == STRING_TYPE_TOKEN) return "STRING_TYPE_TOKEN";
+	if(eType == VALUE_TOKEN) return "VALUE_TOKEN";
+	if(eType == EQUALSIGN_TOKEN) return "EQUALSIGN_TOKEN";
+
+	return "Invalid token";
+}
+#endif

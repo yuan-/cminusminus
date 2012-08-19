@@ -10,7 +10,13 @@
 // 
 //==============================================================================
 
+#include <list>
+#include "CToken.h"
+
 class CCompiler
 {
-
+	TokenList m_lTokenList;
+public:
+	CCompiler(TokenList lTokenList);
+	void Run();
 };

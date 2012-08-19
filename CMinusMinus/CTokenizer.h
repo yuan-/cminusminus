@@ -34,4 +34,8 @@ public:
 	eTokenType GetTokenType(std::string sTokenValue);
 	// Returns the token list
 	std::list<CToken> GetTokenList();
+	// This method returns the string type from the token, this method is only available when compiling in debug mode
+	#if _DEBUG
+	const char * getStringFromTokenType(eTokenType eType);
+	#endif
 };

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 
 // List of all possible tokens
 enum eTokenType
@@ -48,3 +49,5 @@ struct CToken
 	// errors we can also output the line the error occured on
 	int m_iLine;
 };
+
+typedef std::list<CToken> TokenList;

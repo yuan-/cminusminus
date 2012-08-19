@@ -11,3 +11,15 @@
 //==============================================================================
 
 #include "CCompiler.h"
+
+CCompiler::CCompiler(TokenList lTokenList)
+{
+	m_lTokenList = lTokenList;
+}
+
+void CCompiler::Run()
+{
+	for(TokenList::iterator iterator = m_lTokenList.begin(); iterator != m_lTokenList.end(); iterator++)
+	{
+	}
+}
