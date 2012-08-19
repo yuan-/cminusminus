@@ -84,7 +84,10 @@ void CTokenizer::Run()
 
 	while(std::getline(fileStream, sLine))
 	{
+		#if _DEBUG
 		CLogger::Write("%s", sLine.c_str());
+		#endif
+
 		// Loop through the source, character by character
 		for(size_t i = 0; i < sLine.length(); i++)
 		{

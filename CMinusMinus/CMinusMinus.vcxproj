@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCompiler.h" />
+    <ClInclude Include="CError.h" />
     <ClInclude Include="CLogger.h" />
     <ClInclude Include="CParser.h" />
     <ClInclude Include="CToken.h" />

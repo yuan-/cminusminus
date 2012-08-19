@@ -47,5 +47,8 @@
     <ClInclude Include="CCompiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
