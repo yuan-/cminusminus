@@ -10,17 +10,7 @@
 // 
 //==============================================================================
 
-#include <list>
-#include "CToken.h"
-#include "CError.h"
-
 class CCompiler
 {
-	ErrorList m_lErrorList;
-	TokenList m_lTokenList;
 
-public:
-	// The constructor of the CCompiler class, this requires a TokenList (std::list<CToken>) as an argument
-	CCompiler(TokenList lTokenList);
-	void Run();
 };

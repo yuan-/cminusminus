@@ -1,13 +1,15 @@
 //==============================================================================
 //
-// File: CCompiler.cpp
+// File: Util.h
 // Project: CMinusMinus
 // Author(s): Matthias Van Eeghem (matthias@van-eeghem.com)
 // License: See LICENSE in root directory
-// 
-// The CCompiler class outputs the output code off the token list, after the token
-// list being parsed and checked by the CParser.
-// 
+//
+// This file holds a couple of utility functions that may be used across the project.
+//
 //==============================================================================
 
-#include "CCompiler.h"
+#include <string>
+
+// This function returns true if the string input is a float or integer, false otherwise
+bool IsStringFloatOrInteger(std::string sInput);

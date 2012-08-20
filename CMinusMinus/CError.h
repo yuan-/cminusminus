@@ -5,7 +5,7 @@
 // Author(s): Matthias Van Eeghem (matthias@van-eeghem.com)
 // License: See LICENSE in root directory
 // 
-// The CError structure allows for easy error outputting in the CCompiler.
+// The CError structure allows for easy error outputting in the CParser.
 // 
 //==============================================================================
 
@@ -19,7 +19,7 @@ struct CError
 	// The error message
 	std::string m_sMessage;
 	// The line the error occured on
-	int iLine;
+	int m_iLine;
 };
 
 typedef std::list<CError> ErrorList;

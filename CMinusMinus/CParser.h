@@ -9,7 +9,20 @@
 // 
 //==============================================================================
 
+#include <list>
+#include "CToken.h"
+#include "CError.h"
+
 class CParser
 {
+	// The list of all errors for the script
+	ErrorList m_lErrorList;
+	// The list of all tokens for the script
+	TokenList m_lTokenList;
 
+public:
+	// The constructor of the CParser class, this requires a TokenList (std::list<CToken>) as an argument
+	CParser(TokenList lTokenList);
+	// Runs the actual parser
+	void Run();
 };

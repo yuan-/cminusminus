@@ -24,6 +24,9 @@
     <ClCompile Include="CLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -41,13 +44,19 @@
     <ClInclude Include="CLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CCompiler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

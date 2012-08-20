@@ -12,7 +12,7 @@
 #include "CTokenizer.h"
 #include "CToken.h"
 #include "CLogger.h"
-#include "CCompiler.h"
+#include "CParser.h"
 
 #include <iostream>
 #include <list>
@@ -34,8 +34,8 @@ int main(int argc, char * argv[])
 	CTokenizer oTokenizer = CTokenizer(argv[1]);
 	oTokenizer.Run();
 
-	CCompiler oCompiler = CCompiler(oTokenizer.GetTokenList());
-	oCompiler.Run();
+	CParser oParser = CParser(oTokenizer.GetTokenList());
+	oParser.Run();
 
 	// Stop the console from closing
 	std::getchar();

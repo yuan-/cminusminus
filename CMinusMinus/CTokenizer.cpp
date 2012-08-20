@@ -67,7 +67,7 @@ void CTokenizer::Run()
 	// This string will hold the current source line in the while() loop
 	std::string sLine;
 	// The current source line number
-	int iLineNumber = 0;
+	int iLineNumber = 1;
 
 	std::ifstream fileStream(m_sSourceFile);
 
@@ -85,7 +85,7 @@ void CTokenizer::Run()
 	while(std::getline(fileStream, sLine))
 	{
 		#if _DEBUG
-		CLogger::Write("%s", sLine.c_str());
+		CLogger::Write("Line %d: %s", iLineNumber, sLine.c_str());
 		#endif
 
 		// Loop through the source, character by character
@@ -94,7 +94,7 @@ void CTokenizer::Run()
 			// Get the character at the current position
 			char cCurrentChar = sLine[i];
 
-			// Current character is a space
+			// Current character is a space or a tab
 			if(cCurrentChar == ' ' || cCurrentChar == '\t')
 			{
 				// Make sure we actually have a token before pushing it onto the list

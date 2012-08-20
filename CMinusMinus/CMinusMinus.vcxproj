@@ -76,18 +76,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CCompiler.cpp" />
-    <ClCompile Include="CLogger.cpp" />
     <ClCompile Include="CParser.cpp" />
+    <ClCompile Include="CLogger.cpp" />
     <ClCompile Include="CTokenizer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCompiler.h" />
+    <ClInclude Include="CParser.h" />
     <ClInclude Include="CError.h" />
     <ClInclude Include="CLogger.h" />
-    <ClInclude Include="CParser.h" />
     <ClInclude Include="CToken.h" />
     <ClInclude Include="CTokenizer.h" />
+    <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
