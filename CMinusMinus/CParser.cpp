@@ -19,6 +19,14 @@ CParser::CParser(TokenList lTokenList)
 	m_lTokenList = lTokenList;
 }
 
+void CParser::PushBackError(int iErrorLine, std::string sErrorMessage)
+{
+	CError oError;
+	oError.m_iLine = iErrorLine;
+	oError.m_sMessage = sErrorMessage;
+	m_lErrorList.push_back(oError);
+}
+
 // Returns true if the variable exists on the variable list, false otherwise
 bool CParser::VariableExists(std::string sVariableName)
 {
@@ -73,11 +81,7 @@ void CParser::Run()
 			// The only things allowed at the start of the script is a { or type
 			if(CurrentToken.m_iTokenType != OPEN_BRACKET_TOKEN && CurrentToken.m_iTokenType != FLOAT_TYPE_TOKEN && CurrentToken.m_iTokenType != INTEGER_TYPE_TOKEN && CurrentToken.m_iTokenType != STRING_TYPE_TOKEN)
 			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = "Unexpected '" + CurrentToken.m_sValue + "' at start of the script found.";
-				m_lErrorList.push_back(Error);
+				PushBackError(CurrentToken.m_iLine, "Unexpected '" + CurrentToken.m_sValue + "' at start of the script found.");
 			}
 
 			// We don't need to execute the rest of the checks, call continue
@@ -89,17 +93,11 @@ void CParser::Run()
 		{
 			if(!VariableExists(SecondPreviousToken.m_sValue))
 			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-
 				if(IsFloatOrInteger(SecondPreviousToken.m_sValue))
-					Error.m_sMessage = "Cannot assign to a value constant (" + SecondPreviousToken.m_sValue + ").";
+					PushBackError(CurrentToken.m_iLine, "Cannot assign to a value constant (" + SecondPreviousToken.m_sValue + ").");
 
 				if(!IsFloatOrInteger(SecondPreviousToken.m_sValue))
-					Error.m_sMessage = "Cannot assign to '" + SecondPreviousToken.m_sValue + "', that variable does not exist.";
-
-				m_lErrorList.push_back(Error);
+					PushBackError(CurrentToken.m_iLine, "Cannot assign to '" + SecondPreviousToken.m_sValue + "', that variable does not exist.");
 
 				// No need to execute the rest of the checks
 				continue;
@@ -107,11 +105,7 @@ void CParser::Run()
 
 			if(!IsFloatOrInteger(CurrentToken.m_sValue) && !VariableExists(CurrentToken.m_sValue))
 			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist";
-				m_lErrorList.push_back(Error);
+				PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist");
 
 				// No need to execute the rest of the checks
 				continue;
@@ -136,13 +130,7 @@ void CParser::Run()
 						{
 							// Add some typechecking
 							if((*iterator).m_eType != VARIABLE_TYPE_INTEGER)
-							{
-								// Setup the CError object
-								CError Error;
-								Error.m_iLine = CurrentToken.m_iLine;
-								Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
-								m_lErrorList.push_back(Error);
-							}
+								PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
 
 							// Set the value for this variable
 							(*iterator).m_iValue = atoi(CurrentToken.m_sValue.c_str());
@@ -152,13 +140,7 @@ void CParser::Run()
 						{
 							// Add some typechecking
 							if((*iterator).m_eType != VARIABLE_TYPE_FLOAT)
-							{
-								// Setup the CError object
-								CError Error;
-								Error.m_iLine = CurrentToken.m_iLine;
-								Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
-								m_lErrorList.push_back(Error);
-							}
+								PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
 
 							// Set the value for this variable
 							(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
@@ -178,11 +160,7 @@ void CParser::Run()
 								// Type checking: make sure the variables have the same types
 								if((*iterator).m_eType != (*secondIterator).m_eType)
 								{
-									// Setup the CError object
-									CError Error;
-									Error.m_iLine = CurrentToken.m_iLine;
-									Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
-									m_lErrorList.push_back(Error);
+									PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
 									break;
 								}
 
@@ -217,13 +195,7 @@ void CParser::Run()
 			// Allowed previous tokens: {, }, ;
 			// Not allowed previous tokens: {, float, string, int, =, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
-				m_lErrorList.push_back(Error);
-			}
+				PushBackError(CurrentToken.m_iLine, "Finish the statement at line " + sPreviousTokensLine + " first.");
 		}
 
 		if(CurrentToken.m_iTokenType == CLOSE_BRACKET_TOKEN)
@@ -231,13 +203,7 @@ void CParser::Run()
 			// Allowed previous tokens: {, }, ;
 			// Not allowed previous tokens: }, float, string, int, =, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
-				m_lErrorList.push_back(Error);
-			}
+				PushBackError(CurrentToken.m_iLine, "Finish the statement at line " + sPreviousTokensLine + " first.");
 		}
 
 		if(CurrentToken.m_iTokenType == SEMICOLON_TOKEN)
@@ -247,22 +213,10 @@ void CParser::Run()
 			if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != VALUE_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
 			{
 				if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN || PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN || PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
-				{
-					// Setup the CError object
-					CError Error;
-					Error.m_iLine = CurrentToken.m_iLine;
-					Error.m_sMessage = "Expected an equal sign followed by a value or variable on line " + sPreviousTokensLine;
-					m_lErrorList.push_back(Error);
-				}
+					PushBackError(CurrentToken.m_iLine, "Expected an equal sign followed by a value or variable on line " + sPreviousTokensLine);
 
 				if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN)
-				{
-					// Setup the CError object
-					CError Error;
-					Error.m_iLine = CurrentToken.m_iLine;
-					Error.m_sMessage = "Expected a value or variable after the equal sign on line " + sPreviousTokensLine;
-					m_lErrorList.push_back(Error);
-				}
+					PushBackError(CurrentToken.m_iLine, "Expected a value or variable after the equal sign on line " + sPreviousTokensLine);
 			}
 		}
 
@@ -271,13 +225,7 @@ void CParser::Run()
 			// Allowed previous tokens: VALUE_TOKEN
 			// Not allowed previous tokens: =, float, string, int, {, ;, }
 			if(PreviousToken.m_iTokenType != VALUE_TOKEN)
-			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by an equal sign.";
-				m_lErrorList.push_back(Error);
-			}
+				PushBackError(CurrentToken.m_iLine, PreviousToken.m_sValue + " cannot be followed by an equal sign.");
 		}
 
 		if(CurrentToken.m_iTokenType == INTEGER_TYPE_TOKEN || CurrentToken.m_iTokenType == FLOAT_TYPE_TOKEN || CurrentToken.m_iTokenType == STRING_TYPE_TOKEN)
@@ -285,13 +233,7 @@ void CParser::Run()
 			// Allowed previous tokens: {, }, ;
 			// Not allowed previous tokens: =, float, string, int, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by a type.";
-				m_lErrorList.push_back(Error);
-			}
+				PushBackError(CurrentToken.m_iLine, PreviousToken.m_sValue + " cannot be followed by a type.");
 		}
 
 		if(CurrentToken.m_iTokenType == VALUE_TOKEN)
@@ -300,11 +242,7 @@ void CParser::Run()
 			// Not allowed previous tokens: VALUE_TOKEN
 			if(PreviousToken.m_iTokenType == VALUE_TOKEN)
 			{
-				// Setup the CError object
-				CError Error;
-				Error.m_iLine = CurrentToken.m_iLine;
-				Error.m_sMessage = "'" + PreviousToken.m_sValue + "' cannot be followed by '" + CurrentToken.m_sValue + "'.";
-				m_lErrorList.push_back(Error);
+				PushBackError(CurrentToken.m_iLine, "'" + PreviousToken.m_sValue + "' cannot be followed by '" + CurrentToken.m_sValue + "'.");
 			}
 			else
 			{
@@ -317,11 +255,7 @@ void CParser::Run()
 					{
 						if(VariableExists(CurrentToken.m_sValue))
 						{
-							// Setup the CError object
-							CError Error;
-							Error.m_iLine = CurrentToken.m_iLine;
-							Error.m_sMessage = "'" + CurrentToken.m_sValue + "' already exists. Cannot re-declare a variable.";
-							m_lErrorList.push_back(Error);
+							PushBackError(CurrentToken.m_iLine, "'" + CurrentToken.m_sValue + "' already exists. Cannot re-declare a variable.");
 						}
 						else
 						{

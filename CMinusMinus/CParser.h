@@ -28,6 +28,8 @@ public:
 	CParser(TokenList lTokenList);
 	// Returns true if the variable exists on the variable list, false otherwise
 	bool VariableExists(std::string sVariable);
+	// This method pushes back an error on the list
+	void PushBackError(int iErrorLine, std::string sErrorMessage);
 	// Runs the actual parser
 	void Run();
 };
