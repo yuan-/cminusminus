@@ -19,6 +19,22 @@ CParser::CParser(TokenList lTokenList)
 	m_lTokenList = lTokenList;
 }
 
+// Returns true if the variable exists on the variable list, false otherwise
+bool CParser::VariableExists(std::string sVariableName)
+{
+	bool bVariableFound = false;
+
+	// Loop through all the variables
+	for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+	{
+		// If we have a name match, set the bVariableFound bool to true
+		if((*iterator).m_sValueName == sVariableName)
+			bVariableFound = true;
+	}
+
+	return bVariableFound;
+}
+
 void CParser::Run()
 {
 	// Loop through the entire token list
@@ -26,107 +42,275 @@ void CParser::Run()
 	{
 		// Get the current token
 		CToken CurrentToken = (*iterator);
+		// Get the previous token on the list
+		CToken PreviousToken = CToken();
+		// Get the token before the previous token on the list (used to check in the 'something = somethingelse' kind of checks)
+		CToken SecondPreviousToken = CToken();
 
-		// Setup the CError object
-		CError Error;
-		Error.m_iLine = CurrentToken.m_iLine;
+		// If the current iterator isn't at the beginning of the list, we can get the token before that
+		if(iterator != m_lTokenList.begin())
+			PreviousToken = (*(--iterator));
 
-		// The iterator is currently not at the beginning of the list
-		// This has to be in a seperate check since we can't get the previous token if we're at the start of the list
-		if(iterator == m_lTokenList.begin())
-		{
-			if(CurrentToken.m_iTokenType != OPEN_BRACKET_TOKEN && CurrentToken.m_iTokenType != FLOAT_TYPE_TOKEN && CurrentToken.m_iTokenType != INTEGER_TYPE_TOKEN && CurrentToken.m_iTokenType != STRING_TYPE_TOKEN)
-			{
-				Error.m_sMessage = "Unexpected '" + CurrentToken.m_sValue + "' at start of the script found.";
-			}
-		}
+		// If the PreviousToken (the token before the CurrentToken) isn't at the start of the list yet, we can get the token before that one
+		if(iterator != m_lTokenList.begin())
+			SecondPreviousToken = (*(--iterator));	
 
-		// The iterator is at the beginning of the list
-		else
-		{
-			// Get the previous token on the list
-			CToken PreviousToken = (*(--iterator));
-
-			// Convert the line number of the previous token to a string
-			std::stringstream sLineNumberOfPreviousToken;
-			sLineNumberOfPreviousToken << PreviousToken.m_iLine;
-			std::string sPreviousTokensLine = sLineNumberOfPreviousToken.str();
-
-			// We have to increment the iterator again, otherwise this loop will run infinitely
+		// We now have to increment the iterator again, otherwise the loop will run infinitely
+		// If the PreviousToken was set to something else than CToken() (eg iterator-- was run)
+		// increment the iterator.
+		if(PreviousToken.m_iTokenType != INVALID_TOKEN_TYPE)
 			iterator++;
 
-			if(CurrentToken.m_iTokenType == OPEN_BRACKET_TOKEN)
+		// If the SecondPreviousToken was set to something else than CToken(), iterator-- has run twice
+		// Call iterator++ again.
+		if(SecondPreviousToken.m_iTokenType != INVALID_TOKEN_TYPE)
+			iterator++;
+
+		// Check if the iterator is currently at the start of the list
+		// If it is, we need to perform some seperate checks
+		if(iterator == m_lTokenList.begin())
+		{
+			// The only things allowed at the start of the script is a { or type
+			if(CurrentToken.m_iTokenType != OPEN_BRACKET_TOKEN && CurrentToken.m_iTokenType != FLOAT_TYPE_TOKEN && CurrentToken.m_iTokenType != INTEGER_TYPE_TOKEN && CurrentToken.m_iTokenType != STRING_TYPE_TOKEN)
 			{
-				// Allowed: {, }, ;
-				// Not allowed: {, float, string, int, =, VALUE_TOKEN
-				if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-				{
-					Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
-				}
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = "Unexpected '" + CurrentToken.m_sValue + "' at start of the script found.";
+				m_lErrorList.push_back(Error);
 			}
 
-			if(CurrentToken.m_iTokenType == CLOSE_BRACKET_TOKEN)
+			// We don't need to execute the rest of the checks, call continue
+			continue;
+		}
+
+		// If the previous token was an equal sign, and we have a token before that, we're in an assignement statement
+		if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN && SecondPreviousToken.m_iTokenType != INVALID_TOKEN_TYPE)
+		{
+			if(!VariableExists(SecondPreviousToken.m_sValue))
 			{
-				// Allowed: {, }, ;
-				// Not allowed: }, float, string, int, =, VALUE_TOKEN
-				if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-				{
-					Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
-				}
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+
+				if(IsFloatOrInteger(SecondPreviousToken.m_sValue))
+					Error.m_sMessage = "Cannot assign to a value constant (" + SecondPreviousToken.m_sValue + ").";
+
+				if(!IsFloatOrInteger(SecondPreviousToken.m_sValue))
+					Error.m_sMessage = "Cannot assign to '" + SecondPreviousToken.m_sValue + "', that variable does not exist.";
+
+				m_lErrorList.push_back(Error);
+
+				// No need to execute the rest of the checks
+				continue;
 			}
 
-			if(CurrentToken.m_iTokenType == SEMICOLON_TOKEN)
+			if(!IsFloatOrInteger(CurrentToken.m_sValue) && !VariableExists(CurrentToken.m_sValue))
 			{
-				// Allowed: {, ;, }, VALUE_TOKEN
-				// Not allowed: =, float, string, int
-				if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != VALUE_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist";
+				m_lErrorList.push_back(Error);
+
+				// No need to execute the rest of the checks
+				continue;
+			}
+
+			// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
+			for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+			{
+				// Check if the iterator name is equal to the variable name we're trying to assign something to
+				if((*iterator).m_sValueName == SecondPreviousToken.m_sValue)
 				{
-					if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN || PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN || PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
+					// Check if the current token is a value constant
+					// We handle 'var = constants' type of statements here
+					if(IsFloatOrInteger(CurrentToken.m_sValue))
 					{
-						Error.m_sMessage = "Expected an equal sign followed by a statement on line " + sPreviousTokensLine;
-					}
+						// Set the hasBeenAssignedAnything flag for this variable to true
+						// This flags the variable as been defined
+						(*iterator).m_bHasBeenAssignedAnything = true;
 
-					if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN)
+						// Is it an integer constant?
+						if(IsInteger(CurrentToken.m_sValue))
+						{
+							// Set the value for this variable
+							(*iterator).m_iValue = atoi(CurrentToken.m_sValue.c_str());
+						}
+						// Or a float constant
+						else
+						{
+							// Set the value for this variable
+							(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
+						}
+					}
+					// The current token isn't a value constant, it's another variable
+					// We handle 'var = var' type of statements here
+					else
 					{
-						Error.m_sMessage = "Expected a statement after the equal sign on line " + sPreviousTokensLine;
+						// We need to get the value of the variable we're trying to assign the left hand side to
+						// TODO: type checking
+						for(VariableList::iterator secondIterator = m_lVariableList.begin(); secondIterator != m_lVariableList.end(); secondIterator++)
+						{
+							// Get the variable we want to get the value from
+							if((*secondIterator).m_sValueName == CurrentToken.m_sValue)
+							{
+								// Set the hasBeenAssignedAnything flag to true
+								// This flags the variable as been defined
+								(*iterator).m_bHasBeenAssignedAnything = true;
+
+								// Set the value
+								if((*iterator).m_eType == VALUE_TYPE_INTEGER)
+									(*iterator).m_iValue = (*secondIterator).m_iValue;
+								
+								if((*iterator).m_eType == VALUE_TYPE_FLOAT)
+									(*iterator).m_fValue = (*secondIterator).m_fValue;
+							}
+						}
 					}
-				}
-			}
-
-			if(CurrentToken.m_iTokenType == EQUALSIGN_TOKEN)
-			{
-				// Allowed: VALUE_TOKEN
-				// Not allowed: =, float, string, int, {, ;, }
-				if(PreviousToken.m_iTokenType != VALUE_TOKEN)
-				{
-					Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by an equal sign.";
-				}
-			}
-
-			if(CurrentToken.m_iTokenType == INTEGER_TYPE_TOKEN || CurrentToken.m_iTokenType == FLOAT_TYPE_TOKEN || CurrentToken.m_iTokenType == STRING_TYPE_TOKEN)
-			{
-				// Allowed: {, }, ;
-				// Not allowed: =, float, string, int, VALUE_TOKEN
-				if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
-				{
-					Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by a type.";
-				}
-			}
-
-			if(CurrentToken.m_iTokenType == VALUE_TOKEN)
-			{
-				// Allowed: {, }, ;, =, float, string, int, =
-				// Not allowed: VALUE_TOKEN
-				if(PreviousToken.m_iTokenType == VALUE_TOKEN)
-				{
-					Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by '" + CurrentToken.m_sValue + "'.";
 				}
 			}
 		}
 
-		// If we have an error, push it back
-		if(Error.m_sMessage != "")
-			m_lErrorList.push_back(Error);
+		// Convert the line number of the previous token to a string
+		std::stringstream sLineNumberOfPreviousToken;
+		sLineNumberOfPreviousToken << PreviousToken.m_iLine;
+		std::string sPreviousTokensLine = sLineNumberOfPreviousToken.str();
+
+		if(CurrentToken.m_iTokenType == OPEN_BRACKET_TOKEN)
+		{
+			// Allowed previous tokens: {, }, ;
+			// Not allowed previous tokens: {, float, string, int, =, VALUE_TOKEN
+			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
+			{
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
+				m_lErrorList.push_back(Error);
+			}
+		}
+
+		if(CurrentToken.m_iTokenType == CLOSE_BRACKET_TOKEN)
+		{
+			// Allowed previous tokens: {, }, ;
+			// Not allowed previous tokens: }, float, string, int, =, VALUE_TOKEN
+			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
+			{
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = "Finish the statement at line " + sPreviousTokensLine + " first.";
+				m_lErrorList.push_back(Error);
+			}
+		}
+
+		if(CurrentToken.m_iTokenType == SEMICOLON_TOKEN)
+		{
+			// Allowed previous tokens: {, ;, }, VALUE_TOKEN
+			// Not allowed previous tokens: =, float, string, int
+			if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != VALUE_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
+			{
+				if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN || PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN || PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
+				{
+					// Setup the CError object
+					CError Error;
+					Error.m_iLine = CurrentToken.m_iLine;
+					Error.m_sMessage = "Expected an equal sign followed by a value or variable on line " + sPreviousTokensLine;
+					m_lErrorList.push_back(Error);
+				}
+
+				if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN)
+				{
+					// Setup the CError object
+					CError Error;
+					Error.m_iLine = CurrentToken.m_iLine;
+					Error.m_sMessage = "Expected a value or variable after the equal sign on line " + sPreviousTokensLine;
+					m_lErrorList.push_back(Error);
+				}
+			}
+		}
+
+		if(CurrentToken.m_iTokenType == EQUALSIGN_TOKEN)
+		{
+			// Allowed previous tokens: VALUE_TOKEN
+			// Not allowed previous tokens: =, float, string, int, {, ;, }
+			if(PreviousToken.m_iTokenType != VALUE_TOKEN)
+			{
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by an equal sign.";
+				m_lErrorList.push_back(Error);
+			}
+		}
+
+		if(CurrentToken.m_iTokenType == INTEGER_TYPE_TOKEN || CurrentToken.m_iTokenType == FLOAT_TYPE_TOKEN || CurrentToken.m_iTokenType == STRING_TYPE_TOKEN)
+		{
+			// Allowed previous tokens: {, }, ;
+			// Not allowed previous tokens: =, float, string, int, VALUE_TOKEN
+			if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
+			{
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = PreviousToken.m_sValue + " cannot be followed by a type.";
+				m_lErrorList.push_back(Error);
+			}
+		}
+
+		if(CurrentToken.m_iTokenType == VALUE_TOKEN)
+		{
+			// Allowed previous tokens: {, }, ;, =, float, string, int, =
+			// Not allowed previous tokens: VALUE_TOKEN
+			if(PreviousToken.m_iTokenType == VALUE_TOKEN)
+			{
+				// Setup the CError object
+				CError Error;
+				Error.m_iLine = CurrentToken.m_iLine;
+				Error.m_sMessage = "'" + PreviousToken.m_sValue + "' cannot be followed by '" + CurrentToken.m_sValue + "'.";
+				m_lErrorList.push_back(Error);
+			}
+			else
+			{
+				// If the current token is a value token
+				// and the previous token was either a float, string or int type, the user is trying to declare a variable
+				if(PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN || PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN || PreviousToken.m_iTokenType == STRING_TYPE_TOKEN)
+				{
+					// Check if the current token is a valid variable name
+					if(!IsFloatOrInteger(CurrentToken.m_sValue))
+					{
+						if(VariableExists(CurrentToken.m_sValue))
+						{
+							// Setup the CError object
+							CError Error;
+							Error.m_iLine = CurrentToken.m_iLine;
+							Error.m_sMessage = "'" + CurrentToken.m_sValue + "' already exists. Cannot re-declare a variable.";
+							m_lErrorList.push_back(Error);
+						}
+						else
+						{
+							// Setup a CVariable object
+							CVariable oValue;
+							oValue.m_sValueName = CurrentToken.m_sValue;
+
+							// Set the type of the CVariable object according to the type of token the previous token object had
+							if(PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN)
+								oValue.m_eType = VALUE_TYPE_INTEGER;
+
+							if(PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
+								oValue.m_eType = VALUE_TYPE_FLOAT;
+
+							if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN)
+								oValue.m_eType = VALUE_TYPE_STRING;
+
+							// Push it onto the variable list
+							m_lVariableList.push_back(oValue);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Now loop through the error list
@@ -134,8 +318,30 @@ void CParser::Run()
 	if(m_lErrorList.size() > 0) CLogger::Write("\n* Errors found:");
 	#endif
 
+	// Log every error
 	for(ErrorList::iterator iterator = m_lErrorList.begin(); iterator != m_lErrorList.end(); iterator++)
-	{
 		CLogger::Write("Line %d: %s", (*iterator).m_iLine, (*iterator).m_sMessage.c_str());
+
+	// If we're compiling in debug mode we show the variables we've found in the scripts
+	#if _DEBUG
+	CLogger::Write("\n* Variables found:");
+	for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+	{
+		// Check if the variable has been assigned anything
+		if((*iterator).m_bHasBeenAssignedAnything)
+		{
+			// Output the variable name and type
+			if((*iterator).m_eType == VALUE_TYPE_INTEGER)
+				CLogger::Write("Variable %s has value %d", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue);
+
+			if((*iterator).m_eType == VALUE_TYPE_FLOAT)
+				CLogger::Write("Variable %s has value %.2f", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue);
+
+			if((*iterator).m_eType == VALUE_TYPE_STRING)
+				CLogger::Write("Variable %s has value %s", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str());
+		}
+
+		else CLogger::Write("Variable %s has been declared but not yet defined.", (*iterator).m_sValueName.c_str());
 	}
+	#endif
 }

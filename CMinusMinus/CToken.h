@@ -18,6 +18,8 @@
 // List of all possible tokens
 enum eTokenType
 {
+	// Invalid token types, the default for the CToken class
+	INVALID_TOKEN_TYPE = -1,
 	// "{"
 	OPEN_BRACKET_TOKEN,
 	// "}"
@@ -48,6 +50,9 @@ struct CToken
 	// Which line of the source was the token found on? Used in the CCMinusMinus, so when we output
 	// errors we can also output the line the error occured on
 	int m_iLine;
+
+	// The default constructor for the CToken class, sets the token type to INVALID_TOKEN_TYPE
+	CToken::CToken(): m_iTokenType(INVALID_TOKEN_TYPE) { }
 };
 
 typedef std::list<CToken> TokenList;

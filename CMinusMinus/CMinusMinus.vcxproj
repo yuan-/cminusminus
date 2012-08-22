@@ -89,6 +89,7 @@
     <ClInclude Include="CLogger.h" />
     <ClInclude Include="CToken.h" />
     <ClInclude Include="CTokenizer.h" />
+    <ClInclude Include="CVariable.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

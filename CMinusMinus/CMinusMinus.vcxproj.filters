@@ -59,5 +59,8 @@
     <ClInclude Include="CCompiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CVariable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

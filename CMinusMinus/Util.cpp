@@ -10,9 +10,10 @@
 //==============================================================================
 
 #include "Util.h"
+#include <locale>
 
-// This function returns true if the string input is a float or integer, false otherwise
-bool IsStringFloatOrInteger(std::string sInput)
+// This function returns true if the string input is a float or an integer, false otherwise
+bool IsFloatOrInteger(std::string sInput)
 {
 	// This float shouldn't be used for anything else other than being called in sscanf() below
 	float fFloatForParsingWithSccanf;
@@ -23,4 +24,14 @@ bool IsStringFloatOrInteger(std::string sInput)
 
 	// Otherwise, return false
 	return false;
+}
+
+// This function returns true if the string input is an integer, false otherwise
+bool IsInteger(std::string sInput)
+{
+	std::string::const_iterator it = sInput.begin();
+	while (it != sInput.end() && std::isdigit(*it, std::locale()))
+		++it;
+
+	return !sInput.empty() && it == sInput.end();
 }
