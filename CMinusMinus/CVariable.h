@@ -18,9 +18,9 @@
 // This enum holds all possible types the CVariable struct can hold
 enum eVariableTypes
 {
-	VALUE_TYPE_INTEGER,
-	VALUE_TYPE_FLOAT,
-	VALUE_TYPE_STRING
+	VARIABLE_TYPE_INTEGER,
+	VARIABLE_TYPE_FLOAT,
+	VARIABLE_TYPE_STRING
 };
 
 struct CVariable

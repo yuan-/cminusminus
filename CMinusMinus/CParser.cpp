@@ -122,7 +122,7 @@ void CParser::Run()
 			{
 				// Check if the iterator name is equal to the variable name we're trying to assign something to
 				if((*iterator).m_sValueName == SecondPreviousToken.m_sValue)
-				{
+				{	
 					// Check if the current token is a value constant
 					// We handle 'var = constants' type of statements here
 					if(IsFloatOrInteger(CurrentToken.m_sValue))
@@ -134,12 +134,32 @@ void CParser::Run()
 						// Is it an integer constant?
 						if(IsInteger(CurrentToken.m_sValue))
 						{
+							// Add some typechecking
+							if((*iterator).m_eType != VARIABLE_TYPE_INTEGER)
+							{
+								// Setup the CError object
+								CError Error;
+								Error.m_iLine = CurrentToken.m_iLine;
+								Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
+								m_lErrorList.push_back(Error);
+							}
+
 							// Set the value for this variable
 							(*iterator).m_iValue = atoi(CurrentToken.m_sValue.c_str());
 						}
 						// Or a float constant
 						else
 						{
+							// Add some typechecking
+							if((*iterator).m_eType != VARIABLE_TYPE_FLOAT)
+							{
+								// Setup the CError object
+								CError Error;
+								Error.m_iLine = CurrentToken.m_iLine;
+								Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
+								m_lErrorList.push_back(Error);
+							}
+
 							// Set the value for this variable
 							(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
 						}
@@ -153,21 +173,36 @@ void CParser::Run()
 						for(VariableList::iterator secondIterator = m_lVariableList.begin(); secondIterator != m_lVariableList.end(); secondIterator++)
 						{
 							// Get the variable we want to get the value from
-							if((*secondIterator).m_sValueName == CurrentToken.m_sValue)
+							if((*secondIterator).m_sValueName == CurrentToken.m_sValue)			
 							{
+								// Type checking: make sure the variables have the same types
+								if((*iterator).m_eType != (*secondIterator).m_eType)
+								{
+									// Setup the CError object
+									CError Error;
+									Error.m_iLine = CurrentToken.m_iLine;
+									Error.m_sMessage = "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.";
+									m_lErrorList.push_back(Error);
+									break;
+								}
+
 								// Set the hasBeenAssignedAnything flag to true
 								// This flags the variable as been defined
 								(*iterator).m_bHasBeenAssignedAnything = true;
 
 								// Set the value
-								if((*iterator).m_eType == VALUE_TYPE_INTEGER)
+								if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
 									(*iterator).m_iValue = (*secondIterator).m_iValue;
 								
-								if((*iterator).m_eType == VALUE_TYPE_FLOAT)
+								if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
 									(*iterator).m_fValue = (*secondIterator).m_fValue;
 							}
 						}
 					}
+
+					// Once we found the correct variable name, we don't want to check the rest of the variables
+					// Break out of the loop
+					break;
 				}
 			}
 		}
@@ -296,13 +331,13 @@ void CParser::Run()
 
 							// Set the type of the CVariable object according to the type of token the previous token object had
 							if(PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN)
-								oValue.m_eType = VALUE_TYPE_INTEGER;
+								oValue.m_eType = VARIABLE_TYPE_INTEGER;
 
 							if(PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
-								oValue.m_eType = VALUE_TYPE_FLOAT;
+								oValue.m_eType = VARIABLE_TYPE_FLOAT;
 
 							if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN)
-								oValue.m_eType = VALUE_TYPE_STRING;
+								oValue.m_eType = VARIABLE_TYPE_STRING;
 
 							// Push it onto the variable list
 							m_lVariableList.push_back(oValue);
@@ -331,13 +366,13 @@ void CParser::Run()
 		if((*iterator).m_bHasBeenAssignedAnything)
 		{
 			// Output the variable name and type
-			if((*iterator).m_eType == VALUE_TYPE_INTEGER)
+			if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
 				CLogger::Write("Variable %s has value %d", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue);
 
-			if((*iterator).m_eType == VALUE_TYPE_FLOAT)
+			if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
 				CLogger::Write("Variable %s has value %.2f", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue);
 
-			if((*iterator).m_eType == VALUE_TYPE_STRING)
+			if((*iterator).m_eType == VARIABLE_TYPE_STRING)
 				CLogger::Write("Variable %s has value %s", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str());
 		}
 
