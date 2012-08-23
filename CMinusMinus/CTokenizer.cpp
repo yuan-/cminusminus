@@ -84,6 +84,8 @@ void CTokenizer::Run()
 	int iLineNumber = 1;
 	// This bool is set to true if we're parsing the contents of a string literal
 	bool bInStringLiteral = false;
+	// This bool is set to true if we're parsing a multi line comment
+	bool bInMultiLineComment = false;
 
 	std::ifstream fileStream(m_sSourceFile);
 
@@ -111,7 +113,7 @@ void CTokenizer::Run()
 			// Get the character at the current position
 			char cCurrentChar = sLine[i];
 
-			// Are we parsing a string literal?
+			// Are we in a string literal?
 			if(bInStringLiteral)
 			{
 				// If we've found another ", the user is exiting the string literal parsing
@@ -129,6 +131,23 @@ void CTokenizer::Run()
 
 				// As long as we're in the string literal, push the character back onto the list
 				sTokenValue += cCurrentChar;
+				continue;
+			}
+
+			// Are we in a multi line comment?
+			if(bInMultiLineComment)
+			{
+				// End of multi-line comment (/* blah */)
+				if(cCurrentChar == '/' && i != 0 && sLine[i - 1] == '*')
+				{
+					// Reset the token value
+					sTokenValue = "";
+
+					// Set the bool to false
+					bInMultiLineComment = false;
+				}
+
+				// Continue onto the next token
 				continue;
 			}
 
@@ -150,7 +169,7 @@ void CTokenizer::Run()
 			// If we found a double quote, we're entering a string literal
 			else if(cCurrentChar == '"')
 			{
-				// Set the string literal to true
+				// Set the string literal bool to true
 				bInStringLiteral = true;
 				continue;
 			}
@@ -163,6 +182,16 @@ void CTokenizer::Run()
 
 				// Break out of the current line parsing
 				break;
+			}
+
+			// Start of multi-line comment (/* example of multi line comment */)
+			else if(cCurrentChar == '*' && i != 0 && sLine[i - 1] == '/')
+			{
+				// Set the multi line comment bool to true
+				bInMultiLineComment = true;
+
+				// Continue onto the next token
+				continue;
 			}
 
 			// The character is {, }, = or ;

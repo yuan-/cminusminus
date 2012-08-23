@@ -1,5 +1,11 @@
+/*
+Testing
+multiline
+comments
+*/
 {
-	// This is a comment
+	// Normal comment
 	string teststring;
+	/* Another comment test */
 	teststring = "Hello World";
 }
