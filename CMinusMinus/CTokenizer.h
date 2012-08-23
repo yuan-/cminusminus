@@ -30,6 +30,8 @@ public:
 	void Run();
 	// Pushes a token onto the token list
 	void AddTokenToList(std::string sTokenValue, int iLineNumber);
+	// Pushes a string literal onto the token list
+	void AddStringLiteralToList(std::string sValue, int iLineNumber);
 	// Returns the token type from the value
 	eTokenType GetTokenType(std::string sTokenValue);
 	// Returns the token list

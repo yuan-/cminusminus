@@ -1,12 +1,4 @@
 {
-	float fPi =  3.14;
-	float fTest = 1.23;
-	int iSomeInteger = 0;
-	int blah;
-	fPi = fTest;
-	fTest = 13.37;
-	iSomeInteger = 5;
-	blah = 3;
-	iSomeInteger = blah;
-	int someUndefinedVar;
+	string teststring;
+	teststring = "Hello World";
 }

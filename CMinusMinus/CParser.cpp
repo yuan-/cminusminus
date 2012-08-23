@@ -12,6 +12,7 @@
 #include "CParser.h"
 #include "CLogger.h"
 #include "Util.h"
+
 #include <sstream>
 
 CParser::CParser(TokenList lTokenList)
@@ -80,9 +81,7 @@ void CParser::Run()
 		{
 			// The only things allowed at the start of the script is a { or type
 			if(CurrentToken.m_iTokenType != OPEN_BRACKET_TOKEN && CurrentToken.m_iTokenType != FLOAT_TYPE_TOKEN && CurrentToken.m_iTokenType != INTEGER_TYPE_TOKEN && CurrentToken.m_iTokenType != STRING_TYPE_TOKEN)
-			{
 				PushBackError(CurrentToken.m_iLine, "Unexpected '" + CurrentToken.m_sValue + "' at start of the script found.");
-			}
 
 			// We don't need to execute the rest of the checks, call continue
 			continue;
@@ -91,24 +90,44 @@ void CParser::Run()
 		// If the previous token was an equal sign, and we have a token before that, we're in an assignement statement
 		if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN && SecondPreviousToken.m_iTokenType != INVALID_TOKEN_TYPE)
 		{
+			// Variable or constant doesn't exist
 			if(!VariableExists(SecondPreviousToken.m_sValue))
 			{
+				// The user is trying to assign something to a constant value (for example: int 5 = 3;)
 				if(IsFloatOrInteger(SecondPreviousToken.m_sValue))
 					PushBackError(CurrentToken.m_iLine, "Cannot assign to a value constant (" + SecondPreviousToken.m_sValue + ").");
 
+				// The variable isn't a float or integer, it simply doesn't exist
 				if(!IsFloatOrInteger(SecondPreviousToken.m_sValue))
 					PushBackError(CurrentToken.m_iLine, "Cannot assign to '" + SecondPreviousToken.m_sValue + "', that variable does not exist.");
-
-				// No need to execute the rest of the checks
-				continue;
 			}
 
+			// If the current token isn't a float or integer and it doesn't exist, we're either dealing
+			// with a string literal or another variable we're assigning to
 			if(!IsFloatOrInteger(CurrentToken.m_sValue) && !VariableExists(CurrentToken.m_sValue))
 			{
-				PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist");
+				// Check if it's a string literal
+				if(CurrentToken.m_iTokenType == STRING_LITERAL_TOKEN)
+				{
+					// Remove the leading and trailing double quote
+					std::string sStringLiteral = CurrentToken.m_sValue.erase(0, 1);
+					sStringLiteral = sStringLiteral.erase((CurrentToken.m_sValue.length() - 1), 1);
+					
+					// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
+					for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+					{
+						// Check if the iterator name is equal to the variable name we're trying to assign something to
+						if((*iterator).m_sValueName == SecondPreviousToken.m_sValue)
+						{
+							// Set the value to the string variable
+							(*iterator).m_sValue = sStringLiteral;
+							(*iterator).m_bHasBeenAssignedAnything = true;
+						}
+					}
+				}
 
-				// No need to execute the rest of the checks
-				continue;
+				// It's not a string literal, and the variable doesn't exist, show an error
+				else PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist");	
 			}
 
 			// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
@@ -146,12 +165,12 @@ void CParser::Run()
 							(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
 						}
 					}
+
 					// The current token isn't a value constant, it's another variable
 					// We handle 'var = var' type of statements here
 					else
 					{
 						// We need to get the value of the variable we're trying to assign the left hand side to
-						// TODO: type checking
 						for(VariableList::iterator secondIterator = m_lVariableList.begin(); secondIterator != m_lVariableList.end(); secondIterator++)
 						{
 							// Get the variable we want to get the value from
@@ -301,13 +320,13 @@ void CParser::Run()
 		{
 			// Output the variable name and type
 			if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
-				CLogger::Write("Variable %s has value %d", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue);
+				CLogger::Write("Variable %s (integer) has value %d", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue);
 
 			if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
-				CLogger::Write("Variable %s has value %.2f", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue);
+				CLogger::Write("Variable %s (float) has value %.2f", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue);
 
 			if((*iterator).m_eType == VARIABLE_TYPE_STRING)
-				CLogger::Write("Variable %s has value %s", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str());
+				CLogger::Write("Variable %s (string) has value %s", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str());
 		}
 
 		else CLogger::Write("Variable %s has been declared but not yet defined.", (*iterator).m_sValueName.c_str());

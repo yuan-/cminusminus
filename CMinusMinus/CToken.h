@@ -34,6 +34,10 @@ enum eTokenType
 	FLOAT_TYPE_TOKEN,
 	// "string"
 	STRING_TYPE_TOKEN,
+	// """
+	DOUBLE_QUOTE_TOKEN,
+	// Any string literal
+	STRING_LITERAL_TOKEN,
 	// Token for the variable or function name
 	VALUE_TOKEN
 };

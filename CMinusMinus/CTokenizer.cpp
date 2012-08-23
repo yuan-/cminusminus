@@ -40,6 +40,8 @@ eTokenType CTokenizer::GetTokenType(std::string sTokenValue)
 		return STRING_TYPE_TOKEN;
 	if(sTokenValue == "=")
 		return EQUALSIGN_TOKEN;
+	if(sTokenValue == "\"")
+		return DOUBLE_QUOTE_TOKEN;
 
 	// No valid token found, this must be a function or variable name
 	return VALUE_TOKEN;
@@ -58,6 +60,18 @@ void CTokenizer::AddTokenToList(std::string sTokenValue, int iLineNumber)
 	m_lTokenList.push_back(oToken);
 }
 
+void CTokenizer::AddStringLiteralToList(std::string sValue, int iLineNumber)
+{
+	// Create a new CToken object
+	CToken oToken;
+	oToken.m_iTokenType = STRING_LITERAL_TOKEN;
+	oToken.m_iLine = iLineNumber;
+	oToken.m_sValue = sValue;
+
+	// Push the object back on the list
+	m_lTokenList.push_back(oToken);
+}
+
 // Run the tokenizer, this method parses the source file and pushes all
 // found tokens on to the token list
 void CTokenizer::Run()
@@ -68,6 +82,8 @@ void CTokenizer::Run()
 	std::string sLine;
 	// The current source line number
 	int iLineNumber = 1;
+	// This bool is set to true if we're parsing the contents of a string literal
+	bool bInStringLiteral = false;
 
 	std::ifstream fileStream(m_sSourceFile);
 
@@ -94,6 +110,27 @@ void CTokenizer::Run()
 			// Get the character at the current position
 			char cCurrentChar = sLine[i];
 
+			// Are we parsing a string literal?
+			if(bInStringLiteral)
+			{
+				// If we've found another ", the user is exiting the string literal parsing
+				if(cCurrentChar == '"')
+				{
+					AddStringLiteralToList("\"" + sTokenValue + "\"", iLineNumber);
+
+					// Reset the current token value
+					sTokenValue = "";
+
+					// We're no longer parsing a string literal
+					bInStringLiteral = false;
+					continue;
+				}
+
+				// As long as we're in the string literal, push the character back onto the list
+				sTokenValue += cCurrentChar;
+				continue;
+			}
+
 			// Current character is a space or a tab
 			if(cCurrentChar == ' ' || cCurrentChar == '\t')
 			{
@@ -107,6 +144,14 @@ void CTokenizer::Run()
 					// Reset the current token value
 					sTokenValue = "";
 				}
+			}
+
+			// If we found a double quote, we're entering a string literal
+			else if(cCurrentChar == '"')
+			{
+				// Set the string literal to true
+				bInStringLiteral = true;
+				continue;
 			}
 
 			// The character is {, }, = or ;
@@ -169,6 +214,8 @@ const char * CTokenizer::getStringFromTokenType(eTokenType eType)
 	if(eType == STRING_TYPE_TOKEN) return "STRING_TYPE_TOKEN";
 	if(eType == VALUE_TOKEN) return "VALUE_TOKEN";
 	if(eType == EQUALSIGN_TOKEN) return "EQUALSIGN_TOKEN";
+	if(eType == DOUBLE_QUOTE_TOKEN) return "DOUBLE_QUOTE_TOKEN";
+	if(eType == STRING_LITERAL_TOKEN) return "STRING_CONSTANT_TOKEN";
 
 	return "Invalid token";
 }
