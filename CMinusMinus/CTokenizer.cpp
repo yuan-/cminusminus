@@ -98,13 +98,14 @@ void CTokenizer::Run()
 	CLogger::Write("* File contents:");
 	#endif
 
+	// Loop through the source, one line at a time
 	while(std::getline(fileStream, sLine))
 	{
 		#if _DEBUG
 		CLogger::Write("Line %d: %s", iLineNumber, sLine.c_str());
 		#endif
 
-		// Loop through the source, character by character
+		// Loop through the line, one character at a time
 		for(size_t i = 0; i < sLine.length(); i++)
 		{
 			// Get the character at the current position
@@ -152,6 +153,16 @@ void CTokenizer::Run()
 				// Set the string literal to true
 				bInStringLiteral = true;
 				continue;
+			}
+
+			// This is a single line comment
+			else if(cCurrentChar == '/' && i != 0 && sLine[i - 1] == '/')
+			{
+				// Reset the token value
+				sTokenValue = "";
+
+				// Break out of the current line parsing
+				break;
 			}
 
 			// The character is {, }, = or ;
