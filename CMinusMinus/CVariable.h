@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "CIndentation.h"
 #include <string>
 
 // This enum holds all possible types the CVariable struct can hold
@@ -31,6 +32,8 @@ struct CVariable
 	int m_iValue;
 	double m_fValue;
 
+	// Holds the indentation level and ID for this variable
+	CIndentation m_oIndentation;
 	// The name of the variable
 	std::string m_sValueName;
 	// The type this CVariable object holds
@@ -40,7 +43,7 @@ struct CVariable
 	// it's declared and defined.
 	bool m_bHasBeenAssignedAnything;
 
-	CVariable::CVariable(): m_bHasBeenAssignedAnything(false) { }
+	CVariable::CVariable(): m_bHasBeenAssignedAnything(false), m_oIndentation(INVALID_INDENTATION_LEVEL, INVALID_INDENTATION_ID) { }
 };
 
 typedef std::list<CVariable> VariableList; 

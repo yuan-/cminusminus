@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "CIndentation.h"
+
 #include <string>
 #include <list>
 
@@ -54,9 +56,11 @@ struct CToken
 	// Which line of the source was the token found on? Used in the CCMinusMinus, so when we output
 	// errors we can also output the line the error occured on
 	int m_iLine;
+	// The indentation level the CToken is on
+	CIndentation m_oIndentation;
 
 	// The default constructor for the CToken class, sets the token type to INVALID_TOKEN_TYPE
-	CToken::CToken(): m_iTokenType(INVALID_TOKEN_TYPE) { }
+	CToken::CToken(): m_iTokenType(INVALID_TOKEN_TYPE), m_oIndentation(INVALID_INDENTATION_LEVEL, INVALID_INDENTATION_ID) { }
 };
 
 typedef std::list<CToken> TokenList;

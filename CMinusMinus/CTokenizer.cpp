@@ -14,6 +14,7 @@
 #include "CToken.h"
 #include "CTokenizer.h"
 #include "CLogger.h"
+#include "CIndentation.h"
 
 #include <fstream>
 
@@ -48,11 +49,12 @@ eTokenType CTokenizer::GetTokenType(std::string sTokenValue)
 }
 
 // This method pushes a new token onto the token list
-void CTokenizer::AddTokenToList(std::string sTokenValue, int iLineNumber)
+void CTokenizer::AddTokenToList(std::string sTokenValue, int iLineNumber, CIndentation oIndentation)
 {
 	// Create a new CToken object
 	CToken oToken;
 	oToken.m_iTokenType = this->GetTokenType(sTokenValue);
+	oToken.m_oIndentation = oIndentation;
 	oToken.m_iLine = iLineNumber;
 	oToken.m_sValue = sTokenValue;
 
@@ -60,11 +62,12 @@ void CTokenizer::AddTokenToList(std::string sTokenValue, int iLineNumber)
 	m_lTokenList.push_back(oToken);
 }
 
-void CTokenizer::AddStringLiteralToList(std::string sValue, int iLineNumber)
+void CTokenizer::AddStringLiteralToList(std::string sValue, int iLineNumber, CIndentation oIndentation)
 {
 	// Create a new CToken object
 	CToken oToken;
 	oToken.m_iTokenType = STRING_LITERAL_TOKEN;
+	oToken.m_oIndentation = oIndentation;
 	oToken.m_iLine = iLineNumber;
 	oToken.m_sValue = sValue;
 
@@ -86,6 +89,19 @@ void CTokenizer::Run()
 	bool bInStringLiteral = false;
 	// This bool is set to true if we're parsing a multi line comment
 	bool bInMultiLineComment = false;
+
+	// This variable holds the indentation level the current variable is on
+	// Example of a variable on level 0:
+	// int test;
+	// Example of a variable on level 1:
+	// { int test; }
+	int iIndentationLevel = 0;
+
+	// Holds the indentation level ID the variable is on. 
+	// Two variables can be on the same levels but not in the same enclosing brackets
+	// Example: { int test = 42; } { int bla = test; }, bla shouldn't be able to access test
+	// Therefore this variable contains a unique ID for each indentation level
+	int iIndentationLevelID = 0;
 
 	std::ifstream fileStream(m_sSourceFile);
 
@@ -119,7 +135,7 @@ void CTokenizer::Run()
 				// If we've found another ", the user is exiting the string literal parsing
 				if(cCurrentChar == '"')
 				{
-					AddStringLiteralToList("\"" + sTokenValue + "\"", iLineNumber);
+					AddStringLiteralToList("\"" + sTokenValue + "\"", iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
 
 					// Reset the current token value
 					sTokenValue = "";
@@ -159,7 +175,7 @@ void CTokenizer::Run()
 				// When it comes to the second space there's no token yet (seeing as the = sign was just pushed onto the list)
 				if(sTokenValue.length() > 0)
 				{
-					AddTokenToList(sTokenValue, iLineNumber);
+					AddTokenToList(sTokenValue, iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
 
 					// Reset the current token value
 					sTokenValue = "";
@@ -197,11 +213,25 @@ void CTokenizer::Run()
 			// The character is {, }, = or ;
 			else if(cCurrentChar == '{' || cCurrentChar == '}' || cCurrentChar == '=' || cCurrentChar == ';')
 			{
+				if(cCurrentChar == '{')
+				{
+					// We found a {, increase the indentation level and the unique indentation id
+					iIndentationLevel++;
+					iIndentationLevelID++;
+				}
+
+				if(cCurrentChar == '}')
+				{
+					// We found a }, decrease the indentation level, keep increasing the unique id
+					iIndentationLevel--;
+					iIndentationLevelID++;
+				}
+
 				// If we already have a token length (eg: when processing '5;'), we first push
 				// the already existing token onto the token list before processing the new one we just found
 				if(sTokenValue.length() > 0)
 				{
-					AddTokenToList(sTokenValue, iLineNumber);
+					AddTokenToList(sTokenValue, iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
 
 					// Reset the current token value
 					sTokenValue = "";
@@ -209,7 +239,7 @@ void CTokenizer::Run()
 
 				// Set the token string to the one character we just found and push that onto the token list as well
 				sTokenValue += cCurrentChar;
-				AddTokenToList(sTokenValue, iLineNumber);
+				AddTokenToList(sTokenValue, iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
 
 				// Reset the current token value
 				sTokenValue = "";
@@ -231,7 +261,7 @@ void CTokenizer::Run()
 	CLogger::Write("\n* Tokens found in the source:");
 
 	for(TokenList::iterator iterator = m_lTokenList.begin(); iterator != m_lTokenList.end(); iterator++)
-		CLogger::Write("Token found: %s - Value: %s - On line: %d", getStringFromTokenType((*iterator).m_iTokenType), (*iterator).m_sValue.c_str(), (*iterator).m_iLine);
+		CLogger::Write("%s: value: %s, on line: %d", getStringFromTokenType((*iterator).m_iTokenType), (*iterator).m_sValue.c_str(), (*iterator).m_iLine);
 	#endif
 
 }
@@ -255,7 +285,7 @@ const char * CTokenizer::getStringFromTokenType(eTokenType eType)
 	if(eType == VALUE_TOKEN) return "VALUE_TOKEN";
 	if(eType == EQUALSIGN_TOKEN) return "EQUALSIGN_TOKEN";
 	if(eType == DOUBLE_QUOTE_TOKEN) return "DOUBLE_QUOTE_TOKEN";
-	if(eType == STRING_LITERAL_TOKEN) return "STRING_CONSTANT_TOKEN";
+	if(eType == STRING_LITERAL_TOKEN) return "STRING_LITERAL_TOKEN";
 
 	return "Invalid token";
 }

@@ -44,6 +44,22 @@ bool CParser::VariableExists(std::string sVariableName)
 	return bVariableFound;
 }
 
+// This method returns true if both CIndentation levels are either the same or oToAccess
+// is allowed to access variables on oToBeAccessed
+bool CParser::HasCorrectIndentationLevel(CIndentation oToBeAccessed, CIndentation oToAccess)
+{
+	// If the access level is the same, and the indentation ID is the same, return true
+	if(oToBeAccessed.m_iLevel == oToAccess.m_iLevel && oToBeAccessed.m_iLevelID == oToAccess.m_iLevelID)
+		return true;
+
+	// If oToBeAccessed's level is smaller than oToAccess, return true
+	if(oToBeAccessed.m_iLevel < oToAccess.m_iLevel && oToBeAccessed.m_iLevelID < oToAccess.m_iLevelID)
+		return true;
+
+	// We didn't return anything yet, no correct indentation level
+	return false;
+}
+
 void CParser::Run()
 {
 	// Loop through the entire token list
@@ -176,6 +192,13 @@ void CParser::Run()
 							// Get the variable we want to get the value from
 							if((*secondIterator).m_sValueName == CurrentToken.m_sValue)			
 							{
+								// Check if the variable is allowed the other variable
+								if(!HasCorrectIndentationLevel((*secondIterator).m_oIndentation, SecondPreviousToken.m_oIndentation))
+								{
+									PushBackError(CurrentToken.m_iLine, "Cannot access " + (*secondIterator).m_sValueName + ", that variable is declared on another level.");
+									break;
+								}
+
 								// Type checking: make sure the variables have the same types
 								if((*iterator).m_eType != (*secondIterator).m_eType)
 								{
@@ -193,6 +216,9 @@ void CParser::Run()
 								
 								if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
 									(*iterator).m_fValue = (*secondIterator).m_fValue;
+
+								if((*iterator).m_eType == VARIABLE_TYPE_STRING)
+									(*iterator).m_sValue = (*secondIterator).m_sValue;
 							}
 						}
 					}
@@ -279,21 +305,24 @@ void CParser::Run()
 						else
 						{
 							// Setup a CVariable object
-							CVariable oValue;
-							oValue.m_sValueName = CurrentToken.m_sValue;
+							CVariable oVariable;
+							oVariable.m_sValueName = CurrentToken.m_sValue;
 
 							// Set the type of the CVariable object according to the type of token the previous token object had
 							if(PreviousToken.m_iTokenType == INTEGER_TYPE_TOKEN)
-								oValue.m_eType = VARIABLE_TYPE_INTEGER;
+								oVariable.m_eType = VARIABLE_TYPE_INTEGER;
 
 							if(PreviousToken.m_iTokenType == FLOAT_TYPE_TOKEN)
-								oValue.m_eType = VARIABLE_TYPE_FLOAT;
+								oVariable.m_eType = VARIABLE_TYPE_FLOAT;
 
 							if(PreviousToken.m_iTokenType == STRING_TYPE_TOKEN)
-								oValue.m_eType = VARIABLE_TYPE_STRING;
+								oVariable.m_eType = VARIABLE_TYPE_STRING;
+
+							// Save the indentation level for this variable
+							oVariable.m_oIndentation = CurrentToken.m_oIndentation;
 
 							// Push it onto the variable list
-							m_lVariableList.push_back(oValue);
+							m_lVariableList.push_back(oVariable);
 						}
 					}
 				}
@@ -320,16 +349,16 @@ void CParser::Run()
 		{
 			// Output the variable name and type
 			if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
-				CLogger::Write("Variable %s (integer) has value %d", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue);
+				CLogger::Write("Variable %s (integer) has value %d (tab level: %d, tab id: %d)", (*iterator).m_sValueName.c_str(), (*iterator).m_iValue, (*iterator).m_oIndentation.m_iLevel, (*iterator).m_oIndentation.m_iLevelID);
 
 			if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
-				CLogger::Write("Variable %s (float) has value %.2f", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue);
+				CLogger::Write("Variable %s (float) has value %.2f (tab level: %d, tab id: %d)", (*iterator).m_sValueName.c_str(), (*iterator).m_fValue, (*iterator).m_oIndentation.m_iLevel, (*iterator).m_oIndentation.m_iLevelID);
 
 			if((*iterator).m_eType == VARIABLE_TYPE_STRING)
-				CLogger::Write("Variable %s (string) has value %s", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str());
+				CLogger::Write("Variable %s (string) has value %s (tab level: %d, tab id: %d)", (*iterator).m_sValueName.c_str(), (*iterator).m_sValue.c_str(), (*iterator).m_oIndentation.m_iLevel, (*iterator).m_oIndentation.m_iLevelID);
 		}
 
-		else CLogger::Write("Variable %s has been declared but not yet defined.", (*iterator).m_sValueName.c_str());
+		else CLogger::Write("Variable %s has been declared but not yet defined. (tab level: %d, tab id: %d)", (*iterator).m_sValueName.c_str(), (*iterator).m_oIndentation.m_iLevel, (*iterator).m_oIndentation.m_iLevelID);
 	}
 	#endif
 }

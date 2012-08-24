@@ -9,6 +9,8 @@
 //
 //==============================================================================
 
+#pragma once
+
 #include <string>
 
 // This function returns true if the string input is a float or an integer, false otherwise

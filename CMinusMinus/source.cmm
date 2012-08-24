@@ -1,11 +1,36 @@
+/**********************************************
+// Testing
+// a header
+// example
+***********************************************/
+
+// Testing a regular comment
+int iAnswerToUniverse = 42;
+/* More comment testing */
+float fPi = 3.14;
+
 /*
-Testing
-multiline
-comments
+Even
+more 
+comment
+testing
 */
 {
-	// Normal comment
-	string teststring;
-	/* Another comment test */
-	teststring = "Hello World";
+	string sSomeString;
+	sSomeString = "Hello World";
+	
+	// Type casting error test
+	//iAnswerToUniverse = fPi;
+	
+	// Should be 42
+	int iTesting = iAnswerToUniverse;
+	
+	{
+		// Variable doesn't exist error
+		//float fTest = someunexistingvariable;
+	}
 }
+
+// Tab level test
+// Cannot access sSomeString error
+//string sTest = sSomeString;

@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCompiler.h" />
+    <ClInclude Include="CIndentation.h" />
     <ClInclude Include="CParser.h" />
     <ClInclude Include="CError.h" />
     <ClInclude Include="CLogger.h" />

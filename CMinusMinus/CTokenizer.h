@@ -11,6 +11,8 @@
 //
 //==============================================================================
 
+#pragma once
+
 #include "CToken.h"
 
 #include <string>
@@ -29,9 +31,9 @@ public:
 	// Parses the source file
 	void Run();
 	// Pushes a token onto the token list
-	void AddTokenToList(std::string sTokenValue, int iLineNumber);
+	void AddTokenToList(std::string sTokenValue, int iLineNumber, CIndentation oIndentation);
 	// Pushes a string literal onto the token list
-	void AddStringLiteralToList(std::string sValue, int iLineNumber);
+	void AddStringLiteralToList(std::string sValue, int iLineNumber, CIndentation oIndentation);
 	// Returns the token type from the value
 	eTokenType GetTokenType(std::string sTokenValue);
 	// Returns the token list

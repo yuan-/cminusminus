@@ -9,6 +9,8 @@
 // 
 //==============================================================================
 
+#pragma once
+
 #include <list>
 #include "CToken.h"
 #include "CError.h"
@@ -28,6 +30,9 @@ public:
 	CParser(TokenList lTokenList);
 	// Returns true if the variable exists on the variable list, false otherwise
 	bool VariableExists(std::string sVariable);
+	// This method returns true if both CIndentation levels are either the same or oToAccess
+	// is allowed to access variables on oToBeAccessed
+	bool HasCorrectIndentationLevel(CIndentation oToBeAccessed, CIndentation oToAccess);
 	// This method pushes back an error on the list
 	void PushBackError(int iErrorLine, std::string sErrorMessage);
 	// Runs the actual parser
