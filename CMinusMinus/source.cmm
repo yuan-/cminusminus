@@ -7,7 +7,7 @@
 // Testing a regular comment
 int iAnswerToUniverse = 42;
 /* More comment testing */
-float fPi = 3.14;
+float fSomeFloat = 6.28;
 
 /*
 Even
@@ -20,7 +20,7 @@ testing
 	sSomeString = "Hello World";
 	
 	// Type casting error test
-	//iAnswerToUniverse = fPi;
+	//iAnswerToUniverse = fSomeFloat;
 	
 	// Should be 42
 	int iTesting = iAnswerToUniverse;
@@ -34,3 +34,11 @@ testing
 // Tab level test
 // Cannot access sSomeString error
 //string sTest = sSomeString;
+
+// operator+ and operator- test
+float fPi = 1.20 - 0.40 + 2.20 + .14;
+int iTest = 2 + 10 - 20 + 7;
+string sHelloWorld = "Hello " + "World" + "!";
+
+// Invalid operator+ usage
+//string sInvalidString = "Hello" + 5;

@@ -40,6 +40,10 @@ enum eTokenType
 	DOUBLE_QUOTE_TOKEN,
 	// Any string literal
 	STRING_LITERAL_TOKEN,
+	// "+"
+	PLUS_OPERATOR_TOKEN,
+	// "-"
+	MINUS_OPERATOR_TOKEN,
 	// Token for the variable or function name
 	VALUE_TOKEN
 };

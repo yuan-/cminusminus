@@ -31,17 +31,29 @@ void CParser::PushBackError(int iErrorLine, std::string sErrorMessage)
 // Returns true if the variable exists on the variable list, false otherwise
 bool CParser::VariableExists(std::string sVariableName)
 {
-	bool bVariableFound = false;
-
 	// Loop through all the variables
 	for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
 	{
 		// If we have a name match, set the bVariableFound bool to true
 		if((*iterator).m_sValueName == sVariableName)
-			bVariableFound = true;
+			return true;
 	}
 
-	return bVariableFound;
+	return false;
+}
+
+// This method returns a token list iterator from a variable name
+VariableList::iterator CParser::GetVariableListIteratorFromVariableName(std::string sVariableName)
+{
+	// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
+	for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+	{
+		// Check if the iterator name is equal to the variable name we're trying to assign something to
+		if((*iterator).m_sValueName == sVariableName)
+			return iterator;
+	}
+
+	return m_lVariableList.end();
 }
 
 // This method returns true if both CIndentation levels are either the same or oToAccess
@@ -58,6 +70,24 @@ bool CParser::HasCorrectIndentationLevel(CIndentation oToBeAccessed, CIndentatio
 
 	// We didn't return anything yet, no correct indentation level
 	return false;
+}
+
+// Returns the variable type from a string value
+// For example: "3" returns integer, "3.14" float and "Hello" string
+eVariableTypes CParser::GetVariableType(std::string sValue)
+{
+	// Either an integer or float
+	if(IsFloatOrInteger(sValue))
+	{
+		// Integer
+		if(IsInteger(sValue))
+			return VARIABLE_TYPE_INTEGER;
+
+		// Float
+		return VARIABLE_TYPE_FLOAT;
+	}
+	// String
+	else return VARIABLE_TYPE_STRING;
 }
 
 void CParser::Run()
@@ -129,16 +159,19 @@ void CParser::Run()
 					std::string sStringLiteral = CurrentToken.m_sValue.erase(0, 1);
 					sStringLiteral = sStringLiteral.erase((CurrentToken.m_sValue.length() - 1), 1);
 					
+					VariableList::iterator iterator = GetVariableListIteratorFromVariableName(SecondPreviousToken.m_sValue);
+
 					// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
-					for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+					if(iterator != m_lVariableList.end())
 					{
-						// Check if the iterator name is equal to the variable name we're trying to assign something to
-						if((*iterator).m_sValueName == SecondPreviousToken.m_sValue)
+						// Make sure we're assigning it a string
+						if((*iterator).m_eType == VARIABLE_TYPE_STRING)
 						{
 							// Set the value to the string variable
 							(*iterator).m_sValue = sStringLiteral;
 							(*iterator).m_bHasBeenAssignedAnything = true;
 						}
+						else PushBackError(CurrentToken.m_iLine, "Cannot assign \"" + sStringLiteral + "\" to '" + SecondPreviousToken.m_sValue + "', the types differ.");
 					}
 				}
 
@@ -146,86 +179,90 @@ void CParser::Run()
 				else PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', '" + CurrentToken.m_sValue + "' does not exist");	
 			}
 
-			// Loop through all the variables, so we can find the iterator that represents the variable we're trying to assign something to
-			for(VariableList::iterator iterator = m_lVariableList.begin(); iterator != m_lVariableList.end(); iterator++)
+			// Get the iterator in the VariableList for this variable name
+			VariableList::iterator iterator = GetVariableListIteratorFromVariableName(SecondPreviousToken.m_sValue);
+
+			// Is the iterator valid?
+			if(iterator != m_lVariableList.end())
 			{
-				// Check if the iterator name is equal to the variable name we're trying to assign something to
-				if((*iterator).m_sValueName == SecondPreviousToken.m_sValue)
-				{	
-					// Check if the current token is a value constant
-					// We handle 'var = constants' type of statements here
-					if(IsFloatOrInteger(CurrentToken.m_sValue))
+				// Check if the current token is a value constant
+				// We handle 'var = constants' type of statements here
+				if(IsFloatOrInteger(CurrentToken.m_sValue))
+				{
+					// Is it an integer constant?
+					if(IsInteger(CurrentToken.m_sValue))
 					{
+						// Add some typechecking
+						if((*iterator).m_eType != VARIABLE_TYPE_INTEGER)
+						{
+							PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
+							continue;
+						}
+
 						// Set the hasBeenAssignedAnything flag for this variable to true
 						// This flags the variable as been defined
 						(*iterator).m_bHasBeenAssignedAnything = true;
 
-						// Is it an integer constant?
-						if(IsInteger(CurrentToken.m_sValue))
-						{
-							// Add some typechecking
-							if((*iterator).m_eType != VARIABLE_TYPE_INTEGER)
-								PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
-
-							// Set the value for this variable
-							(*iterator).m_iValue = atoi(CurrentToken.m_sValue.c_str());
-						}
-						// Or a float constant
-						else
-						{
-							// Add some typechecking
-							if((*iterator).m_eType != VARIABLE_TYPE_FLOAT)
-								PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
-
-							// Set the value for this variable
-							(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
-						}
+						// Set the value for this variable
+						(*iterator).m_iValue = atoi(CurrentToken.m_sValue.c_str());
 					}
-
-					// The current token isn't a value constant, it's another variable
-					// We handle 'var = var' type of statements here
+					// Or a float constant
 					else
 					{
-						// We need to get the value of the variable we're trying to assign the left hand side to
-						for(VariableList::iterator secondIterator = m_lVariableList.begin(); secondIterator != m_lVariableList.end(); secondIterator++)
+						// Add some typechecking
+						if((*iterator).m_eType != VARIABLE_TYPE_FLOAT)
 						{
-							// Get the variable we want to get the value from
-							if((*secondIterator).m_sValueName == CurrentToken.m_sValue)			
-							{
-								// Check if the variable is allowed the other variable
-								if(!HasCorrectIndentationLevel((*secondIterator).m_oIndentation, SecondPreviousToken.m_oIndentation))
-								{
-									PushBackError(CurrentToken.m_iLine, "Cannot access " + (*secondIterator).m_sValueName + ", that variable is declared on another level.");
-									break;
-								}
-
-								// Type checking: make sure the variables have the same types
-								if((*iterator).m_eType != (*secondIterator).m_eType)
-								{
-									PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
-									break;
-								}
-
-								// Set the hasBeenAssignedAnything flag to true
-								// This flags the variable as been defined
-								(*iterator).m_bHasBeenAssignedAnything = true;
-
-								// Set the value
-								if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
-									(*iterator).m_iValue = (*secondIterator).m_iValue;
-								
-								if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
-									(*iterator).m_fValue = (*secondIterator).m_fValue;
-
-								if((*iterator).m_eType == VARIABLE_TYPE_STRING)
-									(*iterator).m_sValue = (*secondIterator).m_sValue;
-							}
+							PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
+							continue;
 						}
-					}
 
-					// Once we found the correct variable name, we don't want to check the rest of the variables
-					// Break out of the loop
-					break;
+						// Set the hasBeenAssignedAnything flag for this variable to true
+						// This flags the variable as been defined
+						(*iterator).m_bHasBeenAssignedAnything = true;
+
+						// Set the value for this variable
+						(*iterator).m_fValue = atof(CurrentToken.m_sValue.c_str());
+					}
+				}
+
+				// The current token isn't a value constant, it's another variable
+				// We handle 'var = var' type of statements here
+				else
+				{
+					// Get the iterator for the right hand side variable
+					VariableList::iterator currentVariableIterator = GetVariableListIteratorFromVariableName(CurrentToken.m_sValue);
+
+					// Is the iterator valid?
+					if(currentVariableIterator != m_lVariableList.end())
+					{
+						// Check if the variable is allowed the other variable
+						if(!HasCorrectIndentationLevel((*currentVariableIterator).m_oIndentation, SecondPreviousToken.m_oIndentation))
+						{
+							PushBackError(CurrentToken.m_iLine, "Cannot access " + (*currentVariableIterator).m_sValueName + ", that variable is declared on another level.");
+							continue;
+						}
+
+						// Type checking: make sure the variables have the same types
+						if((*iterator).m_eType != (*currentVariableIterator).m_eType)
+						{
+							PushBackError(CurrentToken.m_iLine, "Cannot assign '" + CurrentToken.m_sValue + "' to '" + SecondPreviousToken.m_sValue + "', the types differ.");
+							continue;
+						}
+
+						// Set the hasBeenAssignedAnything flag to true
+						// This flags the variable as been defined
+						(*iterator).m_bHasBeenAssignedAnything = true;
+
+						// Set the value
+						if((*iterator).m_eType == VARIABLE_TYPE_INTEGER)
+							(*iterator).m_iValue = (*currentVariableIterator).m_iValue;
+
+						if((*iterator).m_eType == VARIABLE_TYPE_FLOAT)
+							(*iterator).m_fValue = (*currentVariableIterator).m_fValue;
+
+						if((*iterator).m_eType == VARIABLE_TYPE_STRING)
+							(*iterator).m_sValue = (*currentVariableIterator).m_sValue;
+					}
 				}
 			}
 		}
@@ -235,12 +272,103 @@ void CParser::Run()
 		sLineNumberOfPreviousToken << PreviousToken.m_iLine;
 		std::string sPreviousTokensLine = sLineNumberOfPreviousToken.str();
 
+		// The previous token was either a + or -
+		if(PreviousToken.m_iTokenType == PLUS_OPERATOR_TOKEN || PreviousToken.m_iTokenType == MINUS_OPERATOR_TOKEN)
+		{
+			// Get the token for the assignment variable (the variable we're assigning to)
+			CToken VariableWhichIsBeingAssignedTo = CToken();
+
+			// This variable holds the amounts of times we had to decrement the iterator in order
+			// to find the variable we're assigning to. We need to save the amount of times we've
+			// decremented the iterator in order to increment it the same amount of times again,
+			// otherwise this loop will run infinitely
+			int iAmountOfDecrements = 0;
+
+			// Infinite loop
+			while(true)
+			{
+				// Wait, if the iterator is already at the start of the list, break out of the loop
+				// We can't decrement an iterator which is already at the start of the loop
+				if(iterator == m_lTokenList.begin())
+					break;
+
+				// Save the current iterator position
+				VariableWhichIsBeingAssignedTo = (*iterator--);
+
+				// Increment the amount of decrements we've performed on the iterator
+				iAmountOfDecrements++;
+
+				// If we the token we're processing is a VALUE_TOKEN and it's not a constant value (eg not a float or int)
+				if(VariableWhichIsBeingAssignedTo.m_iTokenType == VALUE_TOKEN && !IsFloatOrInteger(VariableWhichIsBeingAssignedTo.m_sValue))
+					break;
+			}
+
+			// Now we perform the same amount of increments as decrements on the iterator
+			// So we can get it back to its original position
+			for(int i = 0; i < iAmountOfDecrements; i++)
+				iterator++;
+
+			// Now we get the VariableList iterator which is pointing at the correct variable we want to assign to
+			VariableList::iterator variableIterator = GetVariableListIteratorFromVariableName(VariableWhichIsBeingAssignedTo.m_sValue);
+			// Get the variable type of the current token (eg what we're trying to assign to our variable)
+			eVariableTypes eType = GetVariableType(CurrentToken.m_sValue);
+
+			// Make sure the iterator is correct (it's not correct if the example we're trying to assign to doesn't exist)
+			if(variableIterator != m_lVariableList.end())
+			{
+				// Wait, is the type of what we're trying to assign to the variable the same as the variable?
+				if(eType != (*variableIterator).m_eType)
+				{
+					PushBackError(CurrentToken.m_iLine, "Cannot concatenate '" + CurrentToken.m_sValue + "' and '" + (*variableIterator).m_sValueName + "', the types differ.");
+					continue;
+				}
+				
+				// Is this the plus operator?
+				if(PreviousToken.m_iTokenType == PLUS_OPERATOR_TOKEN)
+				{
+					// int + int
+					if(eType == VARIABLE_TYPE_INTEGER)
+						(*variableIterator).m_iValue += atoi(CurrentToken.m_sValue.c_str());
+					// float + float
+					if(eType == VARIABLE_TYPE_FLOAT)
+						(*variableIterator).m_fValue += atof(CurrentToken.m_sValue.c_str());
+					// string + string
+					if(eType == VARIABLE_TYPE_STRING)
+					{
+						// Remove the double quotes from the string
+						std::string sStringLiteral = CurrentToken.m_sValue.erase(0, 1);
+						sStringLiteral = sStringLiteral.erase((CurrentToken.m_sValue.length() - 1), 1);
+
+						// Concat the strings
+						(*variableIterator).m_sValue += sStringLiteral;
+					}
+				}
+
+				// Is this the minus operator?
+				if(PreviousToken.m_iTokenType == MINUS_OPERATOR_TOKEN)
+				{
+					// int - int
+					if(eType == VARIABLE_TYPE_INTEGER)
+						(*variableIterator).m_iValue -= atoi(CurrentToken.m_sValue.c_str());
+					// float - float
+					if(eType == VARIABLE_TYPE_FLOAT)
+						(*variableIterator).m_fValue -= atof(CurrentToken.m_sValue.c_str());
+					// String doesn't support operator-
+					if(eType == VARIABLE_TYPE_STRING)
+						PushBackError(CurrentToken.m_iLine, "The string type does not define the minus operator.");
+				}
+			}
+			continue;
+		}
+
 		if(CurrentToken.m_iTokenType == OPEN_BRACKET_TOKEN)
 		{
 			// Allowed previous tokens: {, }, ;
 			// Not allowed previous tokens: {, float, string, int, =, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
 				PushBackError(CurrentToken.m_iLine, "Finish the statement at line " + sPreviousTokensLine + " first.");
+			
+			continue;
 		}
 
 		if(CurrentToken.m_iTokenType == CLOSE_BRACKET_TOKEN)
@@ -249,6 +377,8 @@ void CParser::Run()
 			// Not allowed previous tokens: }, float, string, int, =, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
 				PushBackError(CurrentToken.m_iLine, "Finish the statement at line " + sPreviousTokensLine + " first.");
+
+			continue;
 		}
 
 		if(CurrentToken.m_iTokenType == SEMICOLON_TOKEN)
@@ -263,6 +393,8 @@ void CParser::Run()
 				if(PreviousToken.m_iTokenType == EQUALSIGN_TOKEN)
 					PushBackError(CurrentToken.m_iLine, "Expected a value or variable after the equal sign on line " + sPreviousTokensLine);
 			}
+
+			continue;
 		}
 
 		if(CurrentToken.m_iTokenType == EQUALSIGN_TOKEN)
@@ -271,6 +403,8 @@ void CParser::Run()
 			// Not allowed previous tokens: =, float, string, int, {, ;, }
 			if(PreviousToken.m_iTokenType != VALUE_TOKEN)
 				PushBackError(CurrentToken.m_iLine, PreviousToken.m_sValue + " cannot be followed by an equal sign.");
+
+			continue;
 		}
 
 		if(CurrentToken.m_iTokenType == INTEGER_TYPE_TOKEN || CurrentToken.m_iTokenType == FLOAT_TYPE_TOKEN || CurrentToken.m_iTokenType == STRING_TYPE_TOKEN)
@@ -279,6 +413,8 @@ void CParser::Run()
 			// Not allowed previous tokens: =, float, string, int, VALUE_TOKEN
 			if(PreviousToken.m_iTokenType != CLOSE_BRACKET_TOKEN && PreviousToken.m_iTokenType != OPEN_BRACKET_TOKEN && PreviousToken.m_iTokenType != SEMICOLON_TOKEN)
 				PushBackError(CurrentToken.m_iLine, PreviousToken.m_sValue + " cannot be followed by a type.");
+
+			continue;
 		}
 
 		if(CurrentToken.m_iTokenType == VALUE_TOKEN)
@@ -327,6 +463,8 @@ void CParser::Run()
 					}
 				}
 			}
+
+			continue;
 		}
 	}
 

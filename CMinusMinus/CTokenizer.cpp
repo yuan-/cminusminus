@@ -43,6 +43,10 @@ eTokenType CTokenizer::GetTokenType(std::string sTokenValue)
 		return EQUALSIGN_TOKEN;
 	if(sTokenValue == "\"")
 		return DOUBLE_QUOTE_TOKEN;
+	if(sTokenValue == "+")
+		return PLUS_OPERATOR_TOKEN;
+	if(sTokenValue == "-")
+		return MINUS_OPERATOR_TOKEN;
 
 	// No valid token found, this must be a function or variable name
 	return VALUE_TOKEN;
@@ -210,8 +214,7 @@ void CTokenizer::Run()
 				continue;
 			}
 
-			// The character is {, }, = or ;
-			else if(cCurrentChar == '{' || cCurrentChar == '}' || cCurrentChar == '=' || cCurrentChar == ';')
+			else if(cCurrentChar == '{' || cCurrentChar == '}' || cCurrentChar == '=' || cCurrentChar == ';' || cCurrentChar == '+' || cCurrentChar == '-')
 			{
 				if(cCurrentChar == '{')
 				{
@@ -286,6 +289,8 @@ const char * CTokenizer::getStringFromTokenType(eTokenType eType)
 	if(eType == EQUALSIGN_TOKEN) return "EQUALSIGN_TOKEN";
 	if(eType == DOUBLE_QUOTE_TOKEN) return "DOUBLE_QUOTE_TOKEN";
 	if(eType == STRING_LITERAL_TOKEN) return "STRING_LITERAL_TOKEN";
+	if(eType == PLUS_OPERATOR_TOKEN) return "PLUS_OPERATOR_TOKEN";
+	if(eType == MINUS_OPERATOR_TOKEN) return "MINUS_OPERATOR_TOKEN";
 
 	return "Invalid token";
 }
