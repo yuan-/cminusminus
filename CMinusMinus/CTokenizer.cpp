@@ -11,10 +11,8 @@
 //
 //==============================================================================
 
-#include "CToken.h"
 #include "CTokenizer.h"
 #include "CLogger.h"
-#include "CIndentation.h"
 
 #include <fstream>
 
@@ -30,9 +28,9 @@ eTokenType CTokenizer::GetTokenType(std::string sTokenValue)
 	if(sTokenValue == ";")
 		return SEMICOLON_TOKEN;
 	if(sTokenValue == "{")
-		return OPEN_BRACKET_TOKEN;
+		return OPEN_CURLY_BRACKET_TOKEN;
 	if(sTokenValue == "}")
-		return CLOSE_BRACKET_TOKEN;
+		return CLOSE_CURLY_BRACKET_TOKEN;
 	if(sTokenValue == "int")
 		return INTEGER_TYPE_TOKEN;
 	if(sTokenValue == "float")
@@ -47,6 +45,12 @@ eTokenType CTokenizer::GetTokenType(std::string sTokenValue)
 		return PLUS_OPERATOR_TOKEN;
 	if(sTokenValue == "-")
 		return MINUS_OPERATOR_TOKEN;
+	if(sTokenValue == "(")
+		return OPEN_BRACKET_TOKEN;
+	if(sTokenValue == ")")
+		return CLOSE_BRACKET_TOKEN;
+	if(sTokenValue == ",")
+		return COMMA_TOKEN;
 
 	// No valid token found, this must be a function or variable name
 	return VALUE_TOKEN;
@@ -139,7 +143,7 @@ void CTokenizer::Run()
 				// If we've found another ", the user is exiting the string literal parsing
 				if(cCurrentChar == '"')
 				{
-					AddStringLiteralToList("\"" + sTokenValue + "\"", iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
+					AddStringLiteralToList(sTokenValue, iLineNumber, CIndentation(iIndentationLevel, iIndentationLevelID));
 
 					// Reset the current token value
 					sTokenValue = "";
@@ -214,7 +218,7 @@ void CTokenizer::Run()
 				continue;
 			}
 
-			else if(cCurrentChar == '{' || cCurrentChar == '}' || cCurrentChar == '=' || cCurrentChar == ';' || cCurrentChar == '+' || cCurrentChar == '-')
+			else if(cCurrentChar == '{' || cCurrentChar == '}' || cCurrentChar == '=' || cCurrentChar == ';' || cCurrentChar == '+' || cCurrentChar == '-' || cCurrentChar == '(' || cCurrentChar == ')' || cCurrentChar == ',')
 			{
 				if(cCurrentChar == '{')
 				{
@@ -270,7 +274,7 @@ void CTokenizer::Run()
 }
 
 // Return the token list
-std::list<CToken> CTokenizer::GetTokenList()
+TokenList CTokenizer::GetTokenList()
 {
 	return m_lTokenList;
 }
@@ -279,8 +283,8 @@ std::list<CToken> CTokenizer::GetTokenList()
 #if _DEBUG
 const char * CTokenizer::getStringFromTokenType(eTokenType eType)
 {
-	if(eType == CLOSE_BRACKET_TOKEN) return "CLOSE_BRACKET_TOKEN";
-	if(eType == OPEN_BRACKET_TOKEN) return "OPEN_BRACKET_TOKEN";
+	if(eType == CLOSE_CURLY_BRACKET_TOKEN) return "CLOSE_BRACKET_TOKEN";
+	if(eType == OPEN_CURLY_BRACKET_TOKEN) return "OPEN_BRACKET_TOKEN";
 	if(eType == SEMICOLON_TOKEN) return "SEMICOLON_TOKEN";
 	if(eType == INTEGER_TYPE_TOKEN) return "INTEGER_TYPE_TOKEN";
 	if(eType == FLOAT_TYPE_TOKEN) return "FLOAT_TYPE_TOKEN";
@@ -291,6 +295,9 @@ const char * CTokenizer::getStringFromTokenType(eTokenType eType)
 	if(eType == STRING_LITERAL_TOKEN) return "STRING_LITERAL_TOKEN";
 	if(eType == PLUS_OPERATOR_TOKEN) return "PLUS_OPERATOR_TOKEN";
 	if(eType == MINUS_OPERATOR_TOKEN) return "MINUS_OPERATOR_TOKEN";
+	if(eType == OPEN_BRACKET_TOKEN) return "OPEN_BRACKET_TOKEN";
+	if(eType == CLOSE_BRACKET_TOKEN) return "CLOSE_BRACKET_TOKEN";
+	if(eType == COMMA_TOKEN) return "COMMA_TOKEN";
 
 	return "Invalid token";
 }

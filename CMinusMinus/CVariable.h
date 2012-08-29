@@ -14,7 +14,7 @@
 #pragma once
 
 #include "CIndentation.h"
-#include <string>
+#include <vector>
 
 // This enum holds all possible types the CVariable struct can hold
 enum eVariableTypes
@@ -46,4 +46,4 @@ struct CVariable
 	CVariable::CVariable(): m_bHasBeenAssignedAnything(false), m_oIndentation(INVALID_INDENTATION_LEVEL, INVALID_INDENTATION_ID) { }
 };
 
-typedef std::list<CVariable> VariableList; 
+typedef std::vector<CVariable> VariableList; 

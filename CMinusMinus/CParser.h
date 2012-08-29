@@ -14,7 +14,7 @@
 #include <list>
 #include "CToken.h"
 #include "CError.h"
-#include "CVariable.h"
+#include "CFunction.h"
 
 class CParser
 {

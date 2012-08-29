@@ -35,3 +35,18 @@ bool IsInteger(std::string sInput)
 
 	return !sInput.empty() && it == sInput.end();
 }
+
+// This function returns a string from a parameter type
+std::string GetTypeAsString(eParameterTypes eType)
+{
+	if(eType == PARAMETER_TYPE_INTEGER)
+		return "integer";
+
+	if(eType == PARAMETER_TYPE_FLOAT)
+		return "float";
+
+	if(eType == PARAMETER_TYPE_STRING)
+		return "string";
+
+	return "Invalid type";
+}

@@ -14,14 +14,12 @@
 #pragma once
 
 #include "CToken.h"
-
 #include <string>
-#include <list>
 
 class CTokenizer
 {
 	// The token list
-	std::list<CToken> m_lTokenList;
+	TokenList m_lTokenList;
 	// The name of the source file we're supposed to parse
 	std::string m_sSourceFile;
 
@@ -37,7 +35,7 @@ public:
 	// Returns the token type from the value
 	eTokenType GetTokenType(std::string sTokenValue);
 	// Returns the token list
-	std::list<CToken> GetTokenList();
+	TokenList GetTokenList();
 	// This method returns the string type from the token, this method is only available when compiling in debug mode
 	#if _DEBUG
 	const char * getStringFromTokenType(eTokenType eType);

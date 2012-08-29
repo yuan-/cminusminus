@@ -13,9 +13,7 @@
 #pragma once
 
 #include "CIndentation.h"
-
-#include <string>
-#include <list>
+#include <vector>
 
 // List of all possible tokens
 enum eTokenType
@@ -23,9 +21,15 @@ enum eTokenType
 	// Invalid token types, the default for the CToken class
 	INVALID_TOKEN_TYPE = -1,
 	// "{"
-	OPEN_BRACKET_TOKEN,
+	OPEN_CURLY_BRACKET_TOKEN,
 	// "}"
+	CLOSE_CURLY_BRACKET_TOKEN,
+	// "("
+	OPEN_BRACKET_TOKEN,
+	// ")"
 	CLOSE_BRACKET_TOKEN,
+	// ","
+	COMMA_TOKEN,
 	// ";"
 	SEMICOLON_TOKEN,
 	// "="
@@ -67,4 +71,4 @@ struct CToken
 	CToken::CToken(): m_iTokenType(INVALID_TOKEN_TYPE), m_oIndentation(INVALID_INDENTATION_LEVEL, INVALID_INDENTATION_ID) { }
 };
 
-typedef std::list<CToken> TokenList;
+typedef std::vector<CToken> TokenList;

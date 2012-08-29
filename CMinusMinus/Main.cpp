@@ -10,12 +10,10 @@
 //==============================================================================
 
 #include "CTokenizer.h"
-#include "CToken.h"
+
 #include "CLogger.h"
 #include "CParser.h"
-
-#include <iostream>
-#include <list>
+#include "CFunctionWrapper.h"
 
 int main(int argc, char * argv[])
 {
@@ -34,6 +32,10 @@ int main(int argc, char * argv[])
 	CTokenizer oTokenizer = CTokenizer(argv[1]);
 	oTokenizer.Run();
 
+	// Register the natives for the language
+	CFunctionWrapper::RegisterNatives();
+
+	// Pass the token list onto the parser
 	CParser oParser = CParser(oTokenizer.GetTokenList());
 	oParser.Run();
 

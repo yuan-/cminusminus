@@ -76,21 +76,29 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CCompiler.cpp" />
+    <ClCompile Include="CFunctionWrapper.cpp" />
     <ClCompile Include="CParser.cpp" />
     <ClCompile Include="CLogger.cpp" />
     <ClCompile Include="CTokenizer.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="NativeFunctions.cpp" />
     <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCompiler.h" />
+    <ClInclude Include="CFunction.h" />
+    <ClInclude Include="CFunctionCallAttempt.h" />
+    <ClInclude Include="CFunctionWrapper.h" />
     <ClInclude Include="CIndentation.h" />
+    <ClInclude Include="CParameter.h" />
     <ClInclude Include="CParser.h" />
     <ClInclude Include="CError.h" />
     <ClInclude Include="CLogger.h" />
+    <ClInclude Include="CReturnValue.h" />
     <ClInclude Include="CToken.h" />
     <ClInclude Include="CTokenizer.h" />
     <ClInclude Include="CVariable.h" />
+    <ClInclude Include="NativeFunctions.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

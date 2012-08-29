@@ -11,9 +11,6 @@
 
 #pragma once
 
-#include <string>
-#include <list>
-
 struct CError
 {
 	// The error message
