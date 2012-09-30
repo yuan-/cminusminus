@@ -10,6 +10,8 @@
 //==============================================================================
 
 #include "NativeFunctions.h"
+#include "CLogger.h"
+#include "CCompiler.h"
 
 // The power function executes base^exponent (both parameters are floats)
 CReturnValue power(ParameterList lParameterList)
@@ -26,4 +28,11 @@ CReturnValue squareroot(ParameterList lParameterList)
 	double fValue = lParameterList[0].m_fValue;
 
 	return CReturnValue(VARIABLE_TYPE_FLOAT, (float) sqrt(fValue));
+}
+
+// The messageBox function, outputs a mesagebox
+CReturnValue messageBox(ParameterList lParameterList)
+{
+	CCompiler::AddFunction(MESSAGEBOX_FUNCTION, lParameterList);
+	return CReturnValue();
 }

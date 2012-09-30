@@ -16,3 +16,5 @@
 CReturnValue power(ParameterList);
 // The squareroot function, returns the squareroot of the float parameter
 CReturnValue squareroot(ParameterList);
+// The messageBox function, outputs a mesagebox
+CReturnValue messageBox(ParameterList);

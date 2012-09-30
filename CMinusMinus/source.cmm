@@ -1,44 +1,4 @@
-/**********************************************
-// Testing
-// a header
-// example
-***********************************************/
+string sMessage = "Hello World!";
+string sTitle = "testing";
 
-// Testing a regular comment
-int iAnswerToUniverse = 42;
-/* More comment testing */
-float fSomeFloat = 6.28;
-
-/*
-Even
-more 
-comment
-testing
-*/
-{
-	string sSomeString;
-	sSomeString = "Hello World";
-	
-	// Type casting error test
-	//iAnswerToUniverse = fSomeFloat;
-	
-	// Should be 42
-	int iTesting = iAnswerToUniverse;
-	
-	{
-		// Variable doesn't exist error
-		//float fTest = someunexistingvariable;
-	}
-}
-
-// Tab level test
-// Cannot access sSomeString error
-//string sTest = sSomeString;
-
-// operator+ and operator- test
-float fPi = 1.20 - 0.40 + 2.20 + .14;
-int iTest = 2 + 10 - 20 + 7;
-string sHelloWorld = "Hello " + "World" + "!";
-
-// Invalid operator+ usage
-//string sInvalidString = "Hello" + 5;
+messageBox(sMessage, sTitle);

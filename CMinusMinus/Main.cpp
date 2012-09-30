@@ -13,6 +13,7 @@
 
 #include "CLogger.h"
 #include "CParser.h"
+#include "CCompiler.h"
 #include "CFunctionWrapper.h"
 
 int main(int argc, char * argv[])
@@ -38,6 +39,8 @@ int main(int argc, char * argv[])
 	// Pass the token list onto the parser
 	CParser oParser = CParser(oTokenizer.GetTokenList());
 	oParser.Run();
+
+	CCompiler::Run();
 
 	// Stop the console from closing
 	std::getchar();
