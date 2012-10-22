@@ -512,7 +512,7 @@ void CParser::Run()
 						(*VariableAssignmentIterator).m_fValue = oAttempt.m_oReturnValue.m_fValue;
 
 					if(oAttempt.m_oReturnValue.m_eType == VARIABLE_TYPE_STRING)
-						(*VariableAssignmentIterator).m_iValue = oAttempt.m_oReturnValue.m_iValue;
+						(*VariableAssignmentIterator).m_sValue = oAttempt.m_oReturnValue.m_sValue;
 				}
 			}
 			// End of function checking

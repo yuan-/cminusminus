@@ -36,3 +36,13 @@ CReturnValue messageBox(ParameterList lParameterList)
 	CCompiler::AddFunction(MESSAGEBOX_FUNCTION, lParameterList);
 	return CReturnValue();
 }
+
+// The substring function returns a substring of the parameter
+CReturnValue substring(ParameterList lParameterList)
+{
+	std::string sString = lParameterList[0].m_sValue;
+	int iStart = lParameterList[1].m_iValue;
+	int iEnd = lParameterList[2].m_iValue;
+
+	return CReturnValue(VARIABLE_TYPE_STRING, sString.substr(iStart, iEnd));
+}

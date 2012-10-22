@@ -1,4 +1,4 @@
 string sMessage = "Hello World!";
-string sTitle = "testing";
+string sTitle = substring(sMessage, 0, 2);
 
 messageBox(sMessage, sTitle);

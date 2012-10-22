@@ -50,6 +50,12 @@ void CFunctionWrapper::RegisterNatives()
 	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
 	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
 	RegisterFunction("messageBox", messageBox, lRequiredParameterTypes);
+
+	lRequiredParameterTypes.clear();
+	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
+	lRequiredParameterTypes.push_back(PARAMETER_TYPE_INTEGER);
+	lRequiredParameterTypes.push_back(PARAMETER_TYPE_INTEGER);
+	RegisterFunction("substring", substring, lRequiredParameterTypes);
 }
 
 // This method returns true if a function exists, false otherwise

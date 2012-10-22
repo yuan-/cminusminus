@@ -18,3 +18,5 @@ CReturnValue power(ParameterList);
 CReturnValue squareroot(ParameterList);
 // The messageBox function, outputs a mesagebox
 CReturnValue messageBox(ParameterList);
+// The substring function returns a substring of the parameter
+CReturnValue substring(ParameterList);
