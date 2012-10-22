@@ -19,4 +19,10 @@ CReturnValue squareroot(ParameterList);
 // The messageBox function, outputs a mesagebox
 CReturnValue messageBox(ParameterList);
 // The substring function returns a substring of the parameter
-CReturnValue substring(ParameterList);
+CReturnValue getSubstring(ParameterList);
+// Returns the string size
+CReturnValue getSize(ParameterList);
+// Convert int and floats to a string
+CReturnValue getSize(ParameterList);
+// Converts any type to a string
+CReturnValue toString(ParameterList lParameterList);

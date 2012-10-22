@@ -1,4 +1,7 @@
-string sMessage = "Hello World!";
-string sTitle = substring(sMessage, 0, 2);
+int x = 1337;
+float y = 69.4;
+
+string sMessage = toString(x);
+string sTitle = toString(y);
 
 messageBox(sMessage, sTitle);

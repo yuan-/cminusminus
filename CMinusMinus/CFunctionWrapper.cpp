@@ -21,12 +21,13 @@
 FunctionList CFunctionWrapper::m_lFunctionList;
 
 // This method registers a function with the script
-void CFunctionWrapper::RegisterFunction(std::string sName, CReturnValue (*pFunctionToCall) (ParameterList), std::vector<eParameterTypes> lParameterTypes)
+void CFunctionWrapper::RegisterFunction(std::string sName, CReturnValue (*pFunctionToCall) (ParameterList), std::vector<eParameterTypes> lParameterTypes, bool bTypeSensitive)
 {
 	// Set up a CFunction object and push it back onto the function list
 	CFunction oFunction;
 	oFunction.m_sName = sName;
 	oFunction.m_lParameterTypes = lParameterTypes;
+	oFunction.m_bTypeSensitive = bTypeSensitive;
 	oFunction.m_pFunctionToCall = pFunctionToCall;
 
 	m_lFunctionList.push_back(oFunction);
@@ -55,7 +56,15 @@ void CFunctionWrapper::RegisterNatives()
 	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
 	lRequiredParameterTypes.push_back(PARAMETER_TYPE_INTEGER);
 	lRequiredParameterTypes.push_back(PARAMETER_TYPE_INTEGER);
-	RegisterFunction("substring", substring, lRequiredParameterTypes);
+	RegisterFunction("getSubstring", getSubstring, lRequiredParameterTypes);
+
+	lRequiredParameterTypes.clear();
+	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
+	RegisterFunction("getSize", getSize, lRequiredParameterTypes);
+
+	lRequiredParameterTypes.clear();
+	lRequiredParameterTypes.push_back(PARAMETER_TYPE_STRING);
+	RegisterFunction("toString", toString, lRequiredParameterTypes);
 }
 
 // This method returns true if a function exists, false otherwise
@@ -98,16 +107,19 @@ CFunctionCallAttempt CFunctionWrapper::CallFunction(std::string sFunctionName, P
 			// Current parameter number
 			int iCurrentParameterNumber = 1;
 
-			// Check if every parameter has the correct type
-			for(unsigned int i = 0; i < lParameterList.size(); i++, iCurrentParameterNumber++)
+			// Check if every parameter has the correct type, only if the function is type sensitive
+			if((*iterator).m_bTypeSensitive)
 			{
-				if(lParameterList[i].m_eType != (*iterator).m_lParameterTypes[i])
+				for(unsigned int i = 0; i < lParameterList.size(); i++, iCurrentParameterNumber++)
 				{
-					// The types of this parameter differ
-					std::stringstream ssErrorMessage;
-					ssErrorMessage << "Parameter " << iCurrentParameterNumber << " has a bad type (expected " << GetTypeAsString((*iterator).m_lParameterTypes[i]) << ", got " << GetTypeAsString(lParameterList[i].m_eType) << ", in function call " << sFunctionName << ")";
+					if(lParameterList[i].m_eType != (*iterator).m_lParameterTypes[i])
+					{
+						// The types of this parameter differ
+						std::stringstream ssErrorMessage;
+						ssErrorMessage << "Parameter " << iCurrentParameterNumber << " has a bad type (expected " << GetTypeAsString((*iterator).m_lParameterTypes[i]) << ", got " << GetTypeAsString(lParameterList[i].m_eType) << ", in function call " << sFunctionName << ")";
 
-					return CFunctionCallAttempt(ssErrorMessage.str());
+						return CFunctionCallAttempt(ssErrorMessage.str());
+					}
 				}
 			}
 

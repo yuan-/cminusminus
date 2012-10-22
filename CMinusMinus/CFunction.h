@@ -22,6 +22,8 @@ struct CFunction
 	std::string m_sName;
 	// A list of parameter types the function expects
 	std::vector<eParameterTypes> m_lParameterTypes;
+	// Do we have to check for types for this function?
+	bool m_bTypeSensitive;
 
 	// A pointer to the function that is supposed to be called
 	// Only for native functions

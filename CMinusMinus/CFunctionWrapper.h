@@ -29,5 +29,5 @@ public:
 	// This method returns true if a function exists, false otherwise
 	static bool FunctionExists(std::string sFunctionName);
 	// This method registers a function with the script
-	static void RegisterFunction(std::string sName, CReturnValue (*pFunctionToCall) (ParameterList), std::vector<eParameterTypes> eParameterTypes);
+	static void RegisterFunction(std::string sName, CReturnValue (*pFunctionToCall) (ParameterList), std::vector<eParameterTypes> eParameterTypes, bool bTypeSensitive = false);
 };
